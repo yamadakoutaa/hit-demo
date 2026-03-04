@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1280">
+<title>HIT AI CASE GUIDE</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy: #1a2744;
+  --blue: #2563eb;
+  --sky: #e0f2fe;
+  --accent: #f59e0b;
+  --green: #10b981;
+  --red: #ef4444;
+  --gray-50: #f9fafb;
+  --gray-100: #f3f4f6;
+  --gray-200: #e5e7eb;
+  --gray-300: #d1d5db;
+  --gray-500: #6b7280;
+  --gray-700: #374151;
+  --gray-900: #111827;
+  --font: 'Noto Sans JP', sans-serif;
+  --shadow: 0 4px 20px rgba(0,0,0,0.08);
+  --shadow-lg: 0 8px 30px rgba(0,0,0,0.12);
+  --radius: 12px;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: var(--font);
+  background: var(--gray-50);
+  color: var(--gray-900);
+  width: 1280px;
+  height: 720px;
+  overflow: hidden;
+}
+
+/* ===== Header ===== */
+.header {
+  background: var(--navy);
+  color: white;
+  padding: 10px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 48px;
+}
+.header-logo { font-size: 17px; font-weight: 700; letter-spacing: 0.05em; }
+.header-logo span { color: var(--accent); }
+.header-right { font-size: 13px; color: rgba(255,255,255,0.6); }
+
+/* ===== Slide Container ===== */
+.slide {
+  display: none;
+  width: 1280px;
+  height: 672px; /* 720 - 48 header */
+  padding: 0;
+  position: relative;
+}
+.slide.active { display: flex; flex-direction: column; }
+
+/* ===== Case Header Bar ===== */
+.case-header {
+  background: linear-gradient(135deg, var(--navy) 0%, #2d3f5e 100%);
+  color: white;
+  padding: 16px 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.case-title-area { display: flex; align-items: center; gap: 16px; }
+.case-icon {
+  width: 48px; height: 48px;
+  background: rgba(255,255,255,0.15);
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 24px;
+}
+.case-number {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--accent);
+  letter-spacing: 0.1em;
+}
+.case-title {
+  font-size: 22px;
+  font-weight: 900;
+  line-height: 1.3;
+}
+.case-counter {
+  font-size: 14px;
+  color: rgba(255,255,255,0.5);
+  font-weight: 500;
+}
+
+/* ===== Main Content ===== */
+.case-body {
+  flex: 1;
+  padding: 24px 40px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  background: var(--gray-50);
+}
+
+/* Agent + Problem Row */
+.agent-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.agent-badge {
+  background: var(--navy);
+  color: white;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: 20px;
+  letter-spacing: 0.05em;
+}
+.problem-text {
+  font-size: 14px;
+  color: var(--gray-700);
+  line-height: 1.6;
+}
+
+/* Input/Output Grid */
+.io-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  flex: 1;
+}
+.io-card {
+  background: white;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+}
+.io-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid var(--gray-100);
+}
+.io-card-icon { font-size: 18px; }
+.io-card-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--gray-500);
+  letter-spacing: 0.1em;
+}
+.io-card-content {
+  flex: 1;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+/* Input specific */
+.input-card { border-left: 4px solid var(--blue); }
+.input-card .io-card-header { border-bottom-color: var(--sky); }
+.prompt-text {
+  background: var(--sky);
+  padding: 14px 16px;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--navy);
+  line-height: 1.6;
+  margin-bottom: 8px;
+}
+.prompt-note {
+  font-size: 12px;
+  color: var(--gray-500);
+  margin-top: 8px;
+}
+
+/* Output specific */
+.output-card { border-left: 4px solid var(--green); }
+.output-card .io-card-header { border-bottom-color: #d1fae5; }
+.output-list {
+  list-style: none;
+  padding: 0;
+}
+.output-list li {
+  padding: 6px 0;
+  font-size: 13px;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  line-height: 1.5;
+}
+.output-list li::before {
+  content: '>';
+  color: var(--green);
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+/* Highlight Bar */
+.highlight-bar {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.highlight-badge {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border: 1px solid var(--accent);
+  color: #92400e;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 8px 16px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.highlight-badge .badge-icon { font-size: 16px; }
+
+/* Spec Bar (bottom) */
+.spec-bar {
+  display: flex;
+  gap: 24px;
+  padding: 10px 20px;
+  background: white;
+  border-radius: 8px;
+  border: 1px solid var(--gray-200);
+}
+.spec-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--gray-500);
+}
+.spec-item strong {
+  color: var(--gray-700);
+  font-weight: 700;
+}
+
+/* Footer Nav */
+.footer-nav {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 36px;
+  background: var(--gray-100);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  font-size: 12px;
+  color: var(--gray-500);
+  border-top: 1px solid var(--gray-200);
+}
+.footer-nav kbd {
+  background: white;
+  border: 1px solid var(--gray-300);
+  border-radius: 4px;
+  padding: 1px 6px;
+  font-size: 11px;
+  font-family: var(--font);
+}
+
+/* Progress dots */
+.progress-dots {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--gray-300);
+  transition: all 0.3s;
+}
+.dot.active {
+  background: var(--accent);
+  width: 24px;
+  border-radius: 4px;
+}
+
+/* Concept badge for CASE 10 */
+.concept-badge {
+  background: #fef2f2;
+  border: 1px solid var(--red);
+  color: #991b1b;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 10px;
+  border-radius: 12px;
+  margin-left: 12px;
+}
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  <div class="header-logo"><span>HIT</span> AI業務自動化エージェント CASE GUIDE</div>
+  <div class="header-right">pecoli &times; Claude Code</div>
+</div>
+
+<!-- ==================== CASE 1 ==================== -->
+<div class="slide active" id="case1">
+  <div class="case-header">
+    <div class="case-title-area">
+      <div class="case-icon">&#x1F4C4;</div>
+      <div>
+        <div class="case-number">CASE 01</div>
+        <div class="case-title">起案書作成</div>
+      </div>
+    </div>
+    <div class="case-counter">1 / 10</div>
+  </div>
+  <div class="case-body">
+    <div class="agent-row">
+      <div class="agent-badge">kian-writer</div>
+      <div class="problem-text">1契約につき最低4回の決裁サイクル。部署ごとに求められる粒度が異なり、統一テンプレートも不在。職員の73%が課題視。</div>
+    </div>
+    <div class="io-grid">
+      <div class="io-card input-card">
+        <div class="io-card-header">
+          <span class="io-card-icon">&#x1F4AC;</span>
+          <span class="io-card-label">INPUT</span>
+        </div>
+        <div class="io-card-content">
+          <div class="prompt-text">デジタルコンテンツ制作業務の契約締結伺いを作成してください。proposal-drafterの出力を参照してください。</div>
+          <div class="prompt-note">&#x2192; 案件概要を一言伝えるだけ。過去の承認済み起案書＋公告書から情報を自動転記。</div>
+        </div>
+      </div>
+      <div class="io-card output-card">
+        <div class="io-card-header">
+          <span class="io-card-icon">&#x1F4C4;</span>
+          <span class="io-card-label">OUTPUT</span>
+        </div>
+        <div class="io-card-content">
+          <ul class="output-list">
+            <li>12セクション構成の起案書（ヘッダー / 件名 / 起案理由 / 契約方式 / 審査結果 / 契約金額...）</li>
+            <li>22箇所の <span style="background:#fef3c7;padding:1px 4px;border-radius:3px;font-size:12px">[要記入: 文書番号]</span> プレースホルダー</li>
+            <li>品質チェック 8/8 合格レポート付き</li>
+            <li>proposal-drafter出力（公告・仕様書）からの自動転記</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="highlight-bar">
+      <div class="highlight-badge"><span class="badge-icon">&#x2728;</span> 22箇所プレースホルダー自動生成</div>
+      <div class="highlight-badge"><span class="badge-icon">&#x2705;</span> 品質チェック 8/8 合格</div>
+      <div class="highlight-badge"><span class="badge-icon">&#x1F517;</span> エージェント間連携（公告書&#x2192;起案書）</div>
+    </div>
+    <div class="spec-bar">
+      <div class="spec-item">&#x1F6E0; <strong>Claude Code</strong></div>
+      <div class="spec-item">&#x1F4B0; <strong>API利用料のみ</strong></div>
+      <div class="spec-item">&#x1F50D; 品質チェック <strong>8項目</strong></div>
+      <div class="spec-item">&#x1F512; <strong>変数置換対応</strong></div>
+    </div>
+  </div>
+  <div class="footer-nav">
+    <div class="progress-dots" id="dots1"></div>
+    <span><kbd>&#x2190;</kbd> <kbd>&#x2192;</kbd> 矢印キーで切替</span>
+  </div>
+</div>
+
+<!-- ==================== CASE 2 ==================== -->
+<div class="slide" id="case2">
+  <div class="case-header">
+    <div class="case-title-area">
+      <div class="case-icon">&#x1F4E2;</div>
+      <div>
+        <div class="case-number">CASE 02</div>
+        <div class="case-title">広報・PR文</div>
+      </div>
+    </div>
+    <div class="case-counter">2 / 10</div>
+  </div>
+  <div class="case-body">
+    <div class="agent-row">
+      <div class="agent-badge">pr-writer</div>
+      <div class="problem-text">未公開情報を含むためAIへの入力をためらう。セキュリティポリシーとの兼ね合いが最大の課題。</div>
+    </div>
+    <div class="io-grid">
+      <div class="io-card input-card">
+        <div class="io-card-header">
+          <span class="io-card-icon">&#x1F4AC;</span>
+          <span class="io-card-label">INPUT</span>
+        </div>
+        <div class="io-card-content">
+          <div class="prompt-text">「ひろしま秋の食と酒まつり2026」の広報文を全形式で作成してください。10月、広島城二の丸広場で初開催。</div>
+          <div class="prompt-note">&#x2192; イベント概要を伝えるだけ。機密情報は自動でフラグ＆プレースホルダー化。</div>
+        </div>
+      </div>
+      <div class="io-card output-card">
+        <div class="io-card-header">
+          <span class="io-card-icon">&#x1F4F0;</span>
+          <span class="io-card-label">OUTPUT</span>
+        </div>
+        <div class="io-card-content">
+          <ul class="output-list">
+            <li>&#x1F4F0; プレスリリース（正式・公式トーン）</li>
+            <li>&#x1F4F1; SNS投稿文（X / Instagram / Facebook 各形式）</li>
+            <li>&#x1F310; Web記事（SEO対応・Dive! Hiroshima準拠）</li>
+            <li>&#x26A0;&#xFE0F; 機密性チェック: ゲストシェフ名・来場見込数・協賛企業名を自動検出</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="highlight-bar">
+      <div class="highlight-badge"><span class="badge-icon">&#x26A0;&#xFE0F;</span> 機密性チェック 3件自動検出</div>
+      <div class="highlight-badge"><span class="badge-icon">&#x1F4DD;</span> 3形式同時生成</div>
+      <div class="highlight-badge"><span class="badge-icon">&#x1F4C8;</span> v1&#x2192;v2: 49項目改善</div>
+    </div>
+    <div class="spec-bar">
+      <div class="spec-item">&#x1F6E0; <strong>Claude Code</strong></div>
+      <div class="spec-item">&#x1F4B0; <strong>API利用料のみ</strong></div>
+      <div class="spec-item">&#x1F50D; トーン一貫性 <strong>7項目</strong></div>
+      <div class="spec-item">&#x1F512; <strong>機密性自動チェック</strong></div>
+    </div>
+  </div>
+  <div class="footer-nav">
+    <div class="progress-dots" id="dots2"></div>
+    <span><kbd>&#x2190;</kbd> <kbd>&#x2192;</kbd> 矢印キーで切替</span>
+  </div>
+</div>
+
+<!-- ==================== CASE 3 ==================== -->
+<div class="slide" id="case3">
+  <div class="case-header">
+    <div class="case-title-area">
+      <div class="case-icon">&#x1F4DA;</div>
+      <div>
+        <div class="case-number">CASE 03</div>
+        <div class="case-title">ナレッジ共有</div>
+      </div>
+    </div>
+    <div class="case-counter">3 / 10</div>
+  </div>
+  <div class="case-body">
+    <div class="agent-row">
+      <div class="agent-badge">knowledge-base</div>
+      <div class="problem-text">年間約1/3の職員が異動。ナレッジが属人化し散逸する構造的課題。新任者は「誰に聞けばいいか」もわからない。</div>
+    </div>
+    <div class="io-grid">
+      <div class="io-card input-card">
+        <div class="io-card-header">
+          <span class="io-card-icon">&#x1F4AC;</span>
+          <span class="io-card-label">INPUT</span>
+        </div>
+        <div class="io-card-content">
+          <div class="prompt-text">営業部の新任職員向けオンボーディング資料を作成してください。4週間カリキュラムを設計してください。</div>
+          <div class="prompt-note">&#x2192; 部署と業務内容を指定するだけ。組織構成・業務フロー・過去の知見を横断して資料化。</div>
+        </div>
+      </div>
+      <div class="io-card output-card">
+        <div class="io-card-header">
+          <span class="io-card-icon">&#x1F4D6;</span>
+          <span class="io-card-label">OUTPUT</span>
+        </div>
+        <div class="io-card-content">
+          <ul class="output-list">
+            <li>4週間オンボーディングカリキュラム</li>
+            <li>Day 1-2: 組織理解 / Day 3-5: 業務概要 / Week 2: 実務OJT / Week 3-4: 自立チェックリスト</li>
+            <li>各業務の手順書・FAQ・関連文書リンク</li>
+            <li>3レベル体系（部門横断 / 部門固有 / 業務プロセス固有）</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="highlight-bar">
+      <div class="highlight-badge"><span class="badge-icon">&#x1F504;</span> 年間1/3の異動に構造対応</div>
+      <div class="highlight-badge"><span class="badge-icon">&#x1F4DA;</span> 3レベルカテゴリ体系</div>
+      <div class="highlight-badge"><span class="badge-icon">&#x1F680;</span> 新人即戦力化</div>
+    </div>
+    <div class="spec-bar">
+      <div class="spec-item">&#x1F6E0; <strong>Claude Code</strong></div>
+      <div class="spec-item">&#x1F4B0; <strong>API利用料のみ</strong></div>
+      <div class="spec-item">&#x1F50D; 品質チェック <strong>6項目</strong></div>
+      <div class="spec-item">&#x1F512; <strong>人事情報変数置換</strong></div>
+    </div>
+  </div>
+  <div class="footer-nav">
+    <div class="progress-dots" id="dots3"></div>
+    <span><kbd>&#x2190;</kbd> <kbd>&#x2192;</kbd> 矢印キーで切替</span>
+  </div>
+</div>
+
+<!-- ==================== CASE 4 ==================== -->
+<div class="slide" id="case4">
+  <div class="case-header">
+    <div class="case-title-area">
+      <div class="case-icon">&#x1F4CB;</div>
+      <div>
+        <div class="case-number">CASE 04</div>
+        <div class="case-title">仕様書作成</div>
+      </div>
+    </div>
+    <div class="case-counter">4 / 10</div>
+  </div>
+  <div class="case-body">
+    <div class="agent-row">
+      <div class="agent-badge">proposal-drafter</div>
+      <div class="agent-badge">spec-writer</div>
+      <div class="problem-text">テンプレートなし、部署ごとにバラバラ。詳細度の基準が不明確で、新任者は過去のものを探して真似るしかない。</div>
+    </div>
+    <div class="io-grid">
+      <div class="io-card input-card">
+        <div class="io-card-header">
+          <span class="io-card-icon">&#x1F4AC;</span>
+          <span class="io-card-label">INPUT</span>
+        </div>
+        <div class="io-card-content">
+          <div class="prompt-text">令和8年度観光デジタルコンテンツ制作業務の公募型プロポーザル資料一式を作成してください。</div>
+          <div class="prompt-note">&#x2192; 案件概要と予算を伝えるだけ。広島県の事務処理要領に準拠した4文書を一括生成。</div>
+        </div>
+      </div>
+      <div class="io-card output-card">
+        <div class="io-card-header">
+          <span class="io-card-icon">&#x1F4C1;</span>
+          <span class="io-card-label">OUTPUT</span>
+        </div>
+        <div class="io-card-content">
+          <ul class="output-list">
+            <li>公告（案件名・日程・参加資格）</li>
+            <li>説明書（手続き詳細・提出方法）</li>
+            <li>仕様書（業務内容・成果物・条件）</li>
+            <li>評価基準（配点表・審査方法）</li>
+            <li>4文書間の整合性チェック付き</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="highlight-bar">
+      <div class="highlight-badge"><span class="badge-icon">&#x1F517;</span> 4文書の整合性自動チェック</div>
+      <div class="highlight-badge"><span class="badge-icon">&#x1F916;</span> 2エージェント連携</div>
+      <div class="highlight-badge"><span class="badge-icon">&#x1F50D;</span> 記載漏れ自動検出・修正</div>
+    </div>
+    <div class="spec-bar">
+      <div class="spec-item">&#x1F6E0; <strong>Claude Code</strong></div>
+      <div class="spec-item">&#x1F4B0; <strong>API利用料のみ</strong></div>
+      <div class="spec-item">&#x1F50D; 整合性チェック <strong>6+7項目</strong></div>
+      <div class="spec-item">&#x1F512; <strong>予算額変数置換</strong></div>
+    </div>
+  </div>
+  <div class="footer-nav">
+    <div class="progress-dots" id="dots4"></div>
+    <span><kbd>&#x2190;</kbd> <kbd>&#x2192;</kbd> 矢印キーで切替</span>
+  </div>
+</div>
+
+<!-- ==================== CASE 5 ==================== -->
+<div class="slide" id="case5">
+  <div class="case-header">
+    <div class="case-title-area">
+      <div class="case-icon">&#x1F50D;</div>
+      <div>
+        <div class="case-number">CASE 05</div>
+        <div class="case-title">情報収集・要約</div>
+      </div>
+    </div>
+    <div class="case-counter">5 / 10</div>
+  </div>
+  <div class="case-body">
+    <div class="agent-row">
+      <div class="agent-badge">researcher</div>
+      <div class="problem-text">ソース付きリサーチが求められるが、複数ソースの横断調査に時間がかかる。ハルシネーション（誤情報）への不安も。</div>
+    </div>
+    <div class="io-grid">
+      <div class="io-card input-card">
+        <div class="io-card-header">
+          <span class="io-card-icon">&#x1F4AC;</span>
+          <span class="io-card-label">INPUT</span>
+        </div>
+        <div class="io-card-content">
+          <div class="prompt-text">観光AIコンシェルジュ導入事例と効果について基礎調査を実施し、詳細レポートにまとめてください。</div>
+          <div class="prompt-note">&#x2192; テーマを指定するだけ。自動で複数ソースを検索・収集・分析し、ファクトチェック済みレポートを生成。</div>
+        </div>
+      </div>
+      <div class="io-card output-card">
+        <div class="io-card-header">
+          <span class="io-card-icon">&#x1F4CA;</span>
+          <span class="io-card-label">OUTPUT</span>
+        </div>
+        <div class="io-card-content">
+          <ul class="output-list">
+            <li>エグゼクティブサマリー（結論先出し）</li>
+            <li>7事例の詳細分析（導入効果・課題・費用）</li>
+            <li>信頼性レベル付きソース一覧（26ソース）</li>
+            <li>ハルシネーションチェック結果（4件自動検出・修正）</li>
+            <li>短期・中期の施策提案</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="highlight-bar">
+      <div class="highlight-badge"><span class="badge-icon">&#x1F50D;</span> 15検索クエリ自動生成</div>
+      <div class="highlight-badge"><span class="badge-icon">&#x1F4D1;</span> 26ソース収集</div>
+      <div class="highlight-badge"><span class="badge-icon">&#x26A0;&#xFE0F;</span> ハルシネーション4件自動修正</div>
+    </div>
+    <div class="spec-bar">
+      <div class="spec-item">&#x1F6E0; <strong>Claude Code + Web検索</strong></div>
+      <div class="spec-item">&#x1F4B0; <strong>API利用料のみ</strong></div>
+      <div class="spec-item">&#x1F50D; 品質チェック <strong>8項目</strong></div>
+      <div class="spec-item">&#x1F512; <strong>公開データのみ（低リスク）</strong></div>
+    </div>
+  </div>
+  <div class="footer-nav">
+    <div class="progress-dots" id="dots5"></div>
+    <span><kbd>&#x2190;</kbd> <kbd>&#x2192;</kbd> 矢印キーで切替</span>
+  </div>
+</div>
+
+<!-- ==================== CASE 6 ==================== -->
+<div class="slide" id="case6">
+  <div class="case-header">
+    <div class="case-title-area">
+      <div class="case-icon">&#x1F4CA;</div>
+      <div>
+        <div class="case-number">CASE 06</div>
+        <div class="case-title">SNSデータ分析</div>
+      </div>
+    </div>
+    <div class="case-counter">6 / 10</div>
+  </div>
+  <div class="case-body">
+    <div class="agent-row">
+      <div class="agent-badge">sns-analyzer</div>
+      <div class="problem-text">ダッシュボードを目視 &#x2192; Excelに手入力。分析よりデータ転記に時間を取られ、月次レポート作成に6-8時間。</div>
+    </div>
+    <div class="io-grid">
+      <div class="io-card input-card">
+        <div class="io-card-header">
+          <span class="io-card-icon">&#x1F4AC;</span>
+          <span class="io-card-label">INPUT</span>
+        </div>
+        <div class="io-card-content">
+          <div class="prompt-text">HIT 4アカウント（Instagram / X / Facebook / TikTok）の2026年1月の月次レポートを生成してください。</div>
+          <div class="prompt-note">&#x2192; 対象アカウントと期間を指定するだけ。KPI集計からインサイト抽出、改善提案まで自動。</div>
+        </div>
+      </div>
+      <div class="io-card output-card">
+        <div class="io-card-header">
+          <span class="io-card-icon">&#x1F4C8;</span>
+          <span class="io-card-label">OUTPUT</span>
+        </div>
+        <div class="io-card-content">
+          <ul class="output-list">
+            <li>4プラットフォーム &times; 8KPI ダッシュボード</li>
+            <li>TOP5 / BOTTOM3 投稿分析</li>
+            <li>7カテゴリ別コンテンツ分析</li>
+            <li>競合5地域ベンチマーク</li>
+            <li>翌月の5つのアクション提案</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="highlight-bar">
+      <div class="highlight-badge"><span class="badge-icon">&#x23F1;&#xFE0F;</span> 6-8時間 &#x2192; 1-2時間に短縮</div>
+      <div class="highlight-badge"><span class="badge-icon">&#x1F6A8;</span> 異常値自動フラグ</div>
+      <div class="highlight-badge"><span class="badge-icon">&#x1F4A1;</span> データ駆動のアクション提案</div>
+    </div>
+    <div class="spec-bar">
+      <div class="spec-item">&#x1F6E0; <strong>Claude Code</strong></div>
+      <div class="spec-item">&#x1F4B0; <strong>API利用料のみ</strong></div>
+      <div class="spec-item">&#x1F50D; 品質チェック <strong>6項目</strong></div>
+      <div class="spec-item">&#x1F512; <strong>公開SNSデータ（低リスク）</strong></div>
+    </div>
+  </div>
+  <div class="footer-nav">
+    <div class="progress-dots" id="dots6"></div>
+    <span><kbd>&#x2190;</kbd> <kbd>&#x2192;</kbd> 矢印キーで切替</span>
+  </div>
+</div>
+
+<!-- ==================== CASE 7 ==================== -->
+<div class="slide" id="case7">
+  <div class="case-header">
+    <div class="case-title-area">
+      <div class="case-icon">&#x1F4C8;</div>
+      <div>
+        <div class="case-number">CASE 07</div>
+        <div class="case-title">観光データ分析</div>
+      </div>
+    </div>
+    <div class="case-counter">7 / 10</div>
+  </div>
+  <div class="case-body">
+    <div class="agent-row">
+      <div class="agent-badge">tourism-data-analyzer</div>
+      <div class="problem-text">官公庁データセットからの手作業抽出。複数ソースの整形・集計に時間がかかり、分析結果を施策に落とし込む余裕がない。</div>
+    </div>
+    <div class="io-grid">
+      <div class="io-card input-card">
+        <div class="io-card-header">
+          <span class="io-card-icon">&#x1F4AC;</span>
+          <span class="io-card-label">INPUT</span>
+        </div>
+        <div class="io-card-content">
+          <div class="prompt-text">2025年10月の広島県宿泊旅行統計を地域別・客層別で分析し、近隣県との比較も含めてください。</div>
+          <div class="prompt-note">&#x2192; 分析テーマと期間を指定するだけ。データ取得 &#x2192; 整形 &#x2192; 分析 &#x2192; 施策提案まで一気通貫。</div>
+        </div>
+      </div>
+      <div class="io-card output-card">
+        <div class="io-card-header">
+          <span class="io-card-icon">&#x1F30D;</span>
+          <span class="io-card-label">OUTPUT</span>
+        </div>
+        <div class="io-card-content">
+          <ul class="output-list">
+            <li>KPI概要テーブル（宿泊者数・稼働率・単価）</li>
+            <li>地域別分析（広島市・宮島・尾道・呉）</li>
+            <li>客層分析（国内 / インバウンド国籍別）</li>
+            <li>競合比較（岡山・山口・愛媛・島根）</li>
+            <li>短期・中期アクション提案</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="highlight-bar">
+      <div class="highlight-badge"><span class="badge-icon">&#x1F4CA;</span> 7つの標準分析軸</div>
+      <div class="highlight-badge"><span class="badge-icon">&#x1F500;</span> データ &#x2192; 分析 &#x2192; 施策提案</div>
+      <div class="highlight-badge"><span class="badge-icon">&#x1F3C6;</span> 競合5地域ベンチマーク</div>
+    </div>
+    <div class="spec-bar">
+      <div class="spec-item">&#x1F6E0; <strong>Claude Code</strong></div>
+      <div class="spec-item">&#x1F4B0; <strong>API利用料のみ</strong></div>
+      <div class="spec-item">&#x1F50D; 品質チェック <strong>6項目</strong></div>
+      <div class="spec-item">&#x1F512; <strong>公開統計データ（低リスク）</strong></div>
+    </div>
+  </div>
+  <div class="footer-nav">
+    <div class="progress-dots" id="dots7"></div>
+    <span><kbd>&#x2190;</kbd> <kbd>&#x2192;</kbd> 矢印キーで切替</span>
+  </div>
+</div>
+
+<!-- ==================== CASE 8 ==================== -->
+<div class="slide" id="case8">
+  <div class="case-header">
+    <div class="case-title-area">
+      <div class="case-icon">&#x1F4BC;</div>
+      <div>
+        <div class="case-number">CASE 08</div>
+        <div class="case-title">会議・プレゼン資料</div>
+      </div>
+    </div>
+    <div class="case-counter">8 / 10</div>
+  </div>
+  <div class="case-body">
+    <div class="agent-row">
+      <div class="agent-badge">meeting-assistant</div>
+      <div class="problem-text">資料の構成に時間がかかる。メディアプロデュース部で特に頻繁。議事録からのアクション抽出も手作業。</div>
+    </div>
+    <div class="io-grid">
+      <div class="io-card input-card">
+        <div class="io-card-header">
+          <span class="io-card-icon">&#x1F4AC;</span>
+          <span class="io-card-label">INPUT</span>
+        </div>
+        <div class="io-card-content">
+          <div class="prompt-text">プロジェクト会議の議事録からアクションアイテムを抽出し、次回アジェンダと議事録整理版を生成してください。</div>
+          <div class="prompt-note">&#x2192; 議事録テキストを渡すだけ。CircleBackの出力をそのまま入力可能。機密性レベルも自動判定。</div>
+        </div>
+      </div>
+      <div class="io-card output-card">
+        <div class="io-card-header">
+          <span class="io-card-icon">&#x1F4CB;</span>
+          <span class="io-card-label">OUTPUT</span>
+        </div>
+        <div class="io-card-content">
+          <ul class="output-list">
+            <li>アクションアイテム一覧（担当者/期限/優先度/ステータス）</li>
+            <li>次回会議アジェンダ案（準備事項付き）</li>
+            <li>議事録整理版（議題別・決定事項・アクション構造化）</li>
+            <li>会議種別に応じた機密性レベル自動判定</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="highlight-bar">
+      <div class="highlight-badge"><span class="badge-icon">&#x1F504;</span> 議事録 &#x2192; 3出力を自動生成</div>
+      <div class="highlight-badge"><span class="badge-icon">&#x1F3A4;</span> CircleBack連携</div>
+      <div class="highlight-badge"><span class="badge-icon">&#x1F512;</span> 機密性レベル自動判定</div>
+    </div>
+    <div class="spec-bar">
+      <div class="spec-item">&#x1F6E0; <strong>Claude Code + CircleBack</strong></div>
+      <div class="spec-item">&#x1F4B0; <strong>API利用料のみ</strong></div>
+      <div class="spec-item">&#x1F50D; 品質チェック <strong>5項目</strong></div>
+      <div class="spec-item">&#x1F512; <strong>会議種別別機密管理</strong></div>
+    </div>
+  </div>
+  <div class="footer-nav">
+    <div class="progress-dots" id="dots8"></div>
+    <span><kbd>&#x2190;</kbd> <kbd>&#x2192;</kbd> 矢印キーで切替</span>
+  </div>
+</div>
+
+<!-- ==================== CASE 9 ==================== -->
+<div class="slide" id="case9">
+  <div class="case-header">
+    <div class="case-title-area">
+      <div class="case-icon">&#x1F4DE;</div>
+      <div>
+        <div class="case-number">CASE 09</div>
+        <div class="case-title">電話応対マニュアル</div>
+      </div>
+    </div>
+    <div class="case-counter">9 / 10</div>
+  </div>
+  <div class="case-body">
+    <div class="agent-row">
+      <div class="agent-badge">knowledge-base</div>
+      <div class="problem-text">標準化されたマニュアルがない。新人が電話応対で困惑し、「誰に聞けばいいか」もわからない状態。部署ごとに対応がバラバラ。</div>
+    </div>
+    <div class="io-grid">
+      <div class="io-card input-card">
+        <div class="io-card-header">
+          <span class="io-card-icon">&#x1F4AC;</span>
+          <span class="io-card-label">INPUT</span>
+        </div>
+        <div class="io-card-content">
+          <div class="prompt-text">HITの電話応対マニュアルを作成してください。FAQ、応対フロー、敬語例文、季節別の頻出問い合わせを含めてください。</div>
+          <div class="prompt-note">&#x2192; 必要な項目を伝えるだけ。組織構成と業務知識から網羅的なマニュアルを自動生成。</div>
+        </div>
+      </div>
+      <div class="io-card output-card">
+        <div class="io-card-header">
+          <span class="io-card-icon">&#x1F4D6;</span>
+          <span class="io-card-label">OUTPUT</span>
+        </div>
+        <div class="io-card-content">
+          <ul class="output-list">
+            <li>問い合わせパターン別FAQ（観光案内・イベント・プレス・取次）</li>
+            <li>応対フロー（初動 &#x2192; 用件確認 &#x2192; 回答/取次 &#x2192; クロージング）</li>
+            <li>敬語例文集（受電・取次・不在対応・折返し）</li>
+            <li>季節別頻出問い合わせ（春: 花見 / 夏: 海水浴 / 秋: 食 / 冬: 牡蠣）</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="highlight-bar">
+      <div class="highlight-badge"><span class="badge-icon">&#x1F476;</span> 新人初日から使える標準マニュアル</div>
+      <div class="highlight-badge"><span class="badge-icon">&#x1F338;</span> 季節別対応パターン</div>
+      <div class="highlight-badge"><span class="badge-icon">&#x1F504;</span> マニュアルが自動進化</div>
+    </div>
+    <div class="spec-bar">
+      <div class="spec-item">&#x1F6E0; <strong>Claude Code</strong></div>
+      <div class="spec-item">&#x1F4B0; <strong>API利用料のみ</strong></div>
+      <div class="spec-item">&#x1F50D; 品質チェック <strong>6項目</strong></div>
+      <div class="spec-item">&#x1F512; <strong>連絡先変数置換</strong></div>
+    </div>
+  </div>
+  <div class="footer-nav">
+    <div class="progress-dots" id="dots9"></div>
+    <span><kbd>&#x2190;</kbd> <kbd>&#x2192;</kbd> 矢印キーで切替</span>
+  </div>
+</div>
+
+<!-- ==================== CASE 10 ==================== -->
+<div class="slide" id="case10">
+  <div class="case-header">
+    <div class="case-title-area">
+      <div class="case-icon">&#x2708;&#xFE0F;</div>
+      <div>
+        <div class="case-number">CASE 10</div>
+        <div class="case-title">出張関連書類</div>
+      </div>
+      <span class="concept-badge">CONCEPT DEMO</span>
+    </div>
+    <div class="case-counter">10 / 10</div>
+  </div>
+  <div class="case-body">
+    <div class="agent-row">
+      <div class="agent-badge" style="background:#6366f1">Claude Code + Manus</div>
+      <div class="problem-text">航空券は2社以上から3見積以上の取得が必須。比較表の作成が手間で、出張のたびに同じ作業の繰り返し。</div>
+    </div>
+    <div class="io-grid">
+      <div class="io-card input-card">
+        <div class="io-card-header">
+          <span class="io-card-icon">&#x1F4AC;</span>
+          <span class="io-card-label">INPUT</span>
+        </div>
+        <div class="io-card-content">
+          <div class="prompt-text">出張先: 東京、日程: 3/20-21。航空券を3社から見積取得し、比較表と出張申請書を作成してください。</div>
+          <div class="prompt-note">&#x2192; 出張先と日程を伝えるだけ。Manusが航空券を自動検索し、Claude Codeが書類を生成。</div>
+        </div>
+      </div>
+      <div class="io-card output-card">
+        <div class="io-card-header">
+          <span class="io-card-icon">&#x1F4C1;</span>
+          <span class="io-card-label">OUTPUT（将来像）</span>
+        </div>
+        <div class="io-card-content">
+          <ul class="output-list">
+            <li>航空券比較表（ANA / JAL / スカイマーク 3社分）</li>
+            <li>最安値・推奨プランの自動提示</li>
+            <li>出張申請書ドラフト（日程・目的・経費）</li>
+            <li>出張精算書テンプレート</li>
+            <li style="color:var(--blue);font-weight:700">&#x1F4A1; Manus連携で航空券検索も全自動化</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="highlight-bar">
+      <div class="highlight-badge"><span class="badge-icon">&#x2708;&#xFE0F;</span> 出張手配業務がほぼゼロに</div>
+      <div class="highlight-badge"><span class="badge-icon">&#x1F517;</span> Claude Code + Manus連携</div>
+      <div class="highlight-badge"><span class="badge-icon">&#x1F4B0;</span> 航空券2社3見積の自動取得</div>
+    </div>
+    <div class="spec-bar">
+      <div class="spec-item">&#x1F6E0; <strong>Claude Code + Manus</strong></div>
+      <div class="spec-item">&#x1F4B0; <strong>API + Manus利用料</strong></div>
+      <div class="spec-item">&#x1F50D; <strong>コンセプトデモ</strong></div>
+      <div class="spec-item">&#x1F512; <strong>公開価格情報のみ</strong></div>
+    </div>
+  </div>
+  <div class="footer-nav">
+    <div class="progress-dots" id="dots10"></div>
+    <span><kbd>&#x2190;</kbd> <kbd>&#x2192;</kbd> 矢印キーで切替</span>
+  </div>
+</div>
+
+<script>
+const slides = document.querySelectorAll('.slide');
+let current = 0;
+const total = slides.length;
+
+function updateDots() {
+  for (let i = 0; i < total; i++) {
+    const dotsContainer = document.getElementById('dots' + (i + 1));
+    if (!dotsContainer) continue;
+    dotsContainer.innerHTML = '';
+    for (let j = 0; j < total; j++) {
+      const dot = document.createElement('div');
+      dot.className = 'dot' + (j === current ? ' active' : '');
+      dotsContainer.appendChild(dot);
+    }
+  }
+}
+
+function goTo(index) {
+  if (index < 0 || index >= total) return;
+  slides[current].classList.remove('active');
+  current = index;
+  slides[current].classList.add('active');
+  updateDots();
+}
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+    e.preventDefault();
+    goTo(current + 1);
+  } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+    e.preventDefault();
+    goTo(current - 1);
+  } else if (e.key === 'Home') {
+    e.preventDefault();
+    goTo(0);
+  } else if (e.key === 'End') {
+    e.preventDefault();
+    goTo(total - 1);
+  }
+});
+
+// Initialize dots
+updateDots();
+</script>
+</body>
+</html>

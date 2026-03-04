@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HIT AI研修 デモリプレイ — Claude Code 実行画面</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&display=swap');
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:#0d1117; color:#c9d1d9; font-family:'Noto Sans JP',sans-serif; height:100vh; overflow:hidden; }
+.container { display:flex; height:100vh; }
+
+/* Sidebar */
+.sidebar { width:280px; background:#161b22; border-right:1px solid #30363d; display:flex; flex-direction:column; }
+.sidebar-header { padding:20px 16px 12px; border-bottom:1px solid #30363d; }
+.sidebar-header h2 { font-size:14px; color:#e94560; font-weight:700; letter-spacing:1px; }
+.sidebar-header p { font-size:11px; color:#8b949e; margin-top:4px; }
+.case-list { flex:1; overflow-y:auto; padding:8px; }
+.case-btn { display:block; width:100%; padding:10px 12px; margin-bottom:4px; background:transparent; border:1px solid transparent; border-radius:6px; color:#c9d1d9; font-size:13px; font-family:'Noto Sans JP',sans-serif; cursor:pointer; text-align:left; transition:all .15s; }
+.case-btn:hover { background:#21262d; border-color:#30363d; }
+.case-btn.active { background:#1a1a2e; border-color:#e94560; color:#fff; }
+.case-btn .case-num { color:#e94560; font-weight:700; font-size:11px; display:block; margin-bottom:2px; }
+.case-btn .case-title { font-size:13px; }
+.case-btn .case-agent { font-size:10px; color:#8b949e; margin-top:2px; display:block; }
+
+/* Controls */
+.controls { display:flex; align-items:center; gap:12px; padding:8px 16px; background:#161b22; border-bottom:1px solid #30363d; }
+.ctrl-btn { background:#21262d; border:1px solid #30363d; color:#c9d1d9; padding:6px 14px; border-radius:6px; font-size:12px; cursor:pointer; font-family:'Noto Sans JP',sans-serif; transition:all .15s; }
+.ctrl-btn:hover { background:#30363d; }
+.ctrl-btn.primary { background:#e94560; border-color:#e94560; color:#fff; }
+.ctrl-btn.primary:hover { background:#d63851; }
+.speed-label { font-size:11px; color:#8b949e; }
+.speed-group { display:flex; gap:4px; }
+.speed-btn { background:#21262d; border:1px solid #30363d; color:#8b949e; padding:4px 10px; border-radius:4px; font-size:11px; cursor:pointer; font-family:monospace; }
+.speed-btn.active { background:#0f3460; border-color:#e94560; color:#fff; }
+.progress-bar { flex:1; height:4px; background:#21262d; border-radius:2px; overflow:hidden; }
+.progress-fill { height:100%; background:#e94560; width:0; transition:width .3s; border-radius:2px; }
+.status-text { font-size:11px; color:#8b949e; min-width:80px; text-align:right; }
+
+/* Main area */
+.main { flex:1; display:flex; flex-direction:column; }
+
+/* Terminal */
+.terminal-wrap { flex:1; display:flex; flex-direction:column; overflow:hidden; }
+.terminal-titlebar { background:#2d333b; padding:8px 12px; display:flex; align-items:center; gap:8px; }
+.dot { width:12px; height:12px; border-radius:50%; }
+.dot.r { background:#ff5f57; }
+.dot.y { background:#febc2e; }
+.dot.g { background:#28c840; }
+.terminal-titlebar span { font-size:12px; color:#8b949e; margin-left:8px; font-family:monospace; }
+.terminal { flex:1; background:#0d1117; padding:16px; overflow-y:auto; font-family:'SF Mono','Fira Code','Courier New',monospace; font-size:13px; line-height:1.6; white-space:pre-wrap; word-wrap:break-word; scroll-behavior:smooth; }
+.terminal .line { min-height:1.6em; }
+.terminal .banner { color:#e94560; }
+.terminal .command { color:#79c0ff; }
+.terminal .prompt-char { color:#3fb950; }
+.terminal .thinking { color:#d2a8ff; }
+.terminal .output { color:#c9d1d9; }
+.terminal .cursor { display:inline-block; width:8px; height:16px; background:#e94560; animation:blink 1s step-end infinite; vertical-align:text-bottom; }
+@keyframes blink { 50% { opacity:0; } }
+.terminal .heading { color:#79c0ff; font-weight:bold; }
+.terminal .table-line { color:#8b949e; }
+.terminal .highlight { color:#ffa657; }
+
+/* Welcome screen */
+.welcome { display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; color:#8b949e; text-align:center; }
+.welcome h1 { font-size:24px; color:#e94560; margin-bottom:8px; }
+.welcome p { font-size:14px; max-width:400px; line-height:1.8; }
+.welcome .arrow { font-size:24px; margin-top:16px; color:#e94560; }
+
+/* Document preview overlay */
+.doc-overlay { position:fixed; top:0; left:0; right:0; bottom:0; z-index:200; display:none; }
+.doc-overlay.show { display:flex; }
+.doc-backdrop { position:absolute; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,.5); }
+.doc-panel { position:relative; z-index:1; margin-left:280px; flex:1; display:flex; flex-direction:column; background:#f0f2f5; animation:slideIn .4s ease; }
+@keyframes slideIn { from{transform:translateY(30px);opacity:0;} to{transform:translateY(0);opacity:1;} }
+.doc-panel-header { background:#1a1a2e; color:#fff; display:flex; align-items:center; gap:12px; padding:10px 20px; }
+.doc-panel-header .dp-badge { background:#e94560; padding:4px 10px; border-radius:4px; font-size:11px; font-weight:700; }
+.doc-panel-header .dp-title { flex:1; font-size:14px; font-weight:700; }
+.doc-panel-header button { background:#0f3460; border:none; color:#fff; padding:6px 14px; border-radius:6px; font-size:12px; cursor:pointer; font-family:'Noto Sans JP',sans-serif; }
+.doc-panel-header button:hover { background:#16213e; }
+.doc-panel-header button.dp-close { background:#e94560; }
+.doc-panel-header button.dp-close:hover { background:#d63851; }
+.doc-iframe { flex:1; border:none; width:100%; }
+
+/* Converting animation */
+.converting-msg { display:inline-flex; align-items:center; gap:8px; color:#d2a8ff; }
+.converting-msg .spinner { display:inline-block; width:14px; height:14px; border:2px solid #d2a8ff; border-top-color:transparent; border-radius:50%; animation:spin .8s linear infinite; }
+@keyframes spin { to{transform:rotate(360deg);} }
+</style>
+</head>
+<body>
+<div class="container">
+  <nav class="sidebar">
+    <div class="sidebar-header">
+      <h2>HIT AI DEMO</h2>
+      <p>Claude Code 実行リプレイ</p>
+    </div>
+    <div class="case-list" id="caseList"></div>
+  </nav>
+  <div class="main">
+    <div class="controls">
+      <button class="ctrl-btn primary" id="btnPlay" onclick="togglePlay()">&#9654; 再生</button>
+      <button class="ctrl-btn" onclick="restart()">&#8634; 最初から</button>
+      <span class="speed-label">速度:</span>
+      <div class="speed-group">
+        <button class="speed-btn" data-speed="0.5" onclick="setSpeed(0.5,this)">0.5x</button>
+        <button class="speed-btn active" data-speed="1" onclick="setSpeed(1,this)">1x</button>
+        <button class="speed-btn" data-speed="2" onclick="setSpeed(2,this)">2x</button>
+        <button class="speed-btn" data-speed="4" onclick="setSpeed(4,this)">4x</button>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+      <span class="status-text" id="statusText">待機中</span>
+    </div>
+    <div class="terminal-wrap">
+      <div class="terminal-titlebar">
+        <div class="dot r"></div><div class="dot y"></div><div class="dot g"></div>
+        <span id="titlebarText">Terminal — zsh</span>
+      </div>
+      <div class="terminal" id="terminal">
+        <div class="welcome">
+          <h1>HIT AI業務自動化デモ</h1>
+          <p>左のケース一覧から、再生したいデモを選んでください。<br>Claude Code がリアルタイムで出力を生成する様子をシミュレーションします。</p>
+          <div class="arrow">&#8592;</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Document Preview Overlay -->
+<div class="doc-overlay" id="docOverlay">
+  <div class="doc-backdrop" onclick="closeDocPreview()"></div>
+  <div class="doc-panel">
+    <div class="doc-panel-header">
+      <span class="dp-badge" id="dpBadge">文書</span>
+      <span class="dp-title" id="dpTitle">文書プレビュー</span>
+      <button onclick="window.open(document.getElementById('docIframe').src,'_blank')">&#x2197; 別窓で開く</button>
+      <button class="dp-close" onclick="closeDocPreview()">&#x2715; 閉じる</button>
+    </div>
+    <iframe class="doc-iframe" id="docIframe"></iframe>
+  </div>
+</div>
+
+<script>
+const CASES = [
+  {
+    id:1, title:'起案書作成', agent:'kian-writer',
+    prompt:'デジタルコンテンツ制作業務の契約締結伺いを作成してください。proposal-drafterの出力を参照してください。案件名「令和8年度観光デジタルコンテンツ制作及びSNS運用業務」、予算800万円（税込）、公募型プロポーザル方式。',
+    lines:[
+'# 起 案 書','','---','','## ■ 起案書ヘッダー','','| 項目 | 内容 |','|------|------|','| 文書番号 | [要記入: 文書番号] |','| 起案日 | 令和８年４月22日 |','| 決裁区分 | 会長決裁 ※推定（契約金額が高額のため会長決裁と推定） |','| 起案部署 | 企画総務部 |','| 起案者 | [要記入: 起案者氏名] |','','---','','## ■ 件名','','令和８年度広島県観光デジタルコンテンツ制作及びSNS運用業務委託契約の締結について','','---','','## ■ 要旨（起案理由）','','令和８年度広島県観光デジタルコンテンツ制作及びSNS運用業務について、公募型プロポーザル方式により受託候補者を選定した結果、下記のとおり最優秀提案者が決定したので、当該事業者と業務委託契約を締結したく伺うものである。','','本業務は、広島県の観光魅力を効果的に伝えるデジタルコンテンツ（動画・静止画・記事等）の制作及びSNSアカウントの戦略的運用を通じて、広島県への来訪意欲の醸成及び観光消費額の向上を図ることを目的とするものであり、令和８年度事業計画に基づき実施するものである。','','---','','## ■ 内容','','### １ 契約の目的','','広島県の観光資源（瀬戸内海の多島美、世界遺産、豊かな食文化等）を題材としたデジタルコンテンツの企画・制作、SNSアカウントの運用・管理、インフルエンサーを活用した情報拡散及び効果測定を行うもの。','','### ２ 契約方式及び選定経過','','（１）契約方式','　　公募型プロポーザル方式による最優秀提案者との随意契約','','（２）選定経過','','| 項目 | 内容 |','|------|------|','| 公告日 | 令和８年４月１日 |','| 参加資格確認申請 | 令和８年４月８日締切 |','| 提案書提出 | 令和８年４月14日締切 |','| 提案書提出者数 | [要記入: 応募者数]社 |','| 審査会開催日 | [要記入: 審査会日付] |','','### ３ 契約の相手方','','| 項目 | 内容 |','|------|------|','| 名称 | [要記入: 契約相手方の正式名称] |','| 所在地 | [要記入: 所在地] |','| 代表者 | [要記入: 代表者名] |','','### ４ 契約金額','','| 項目 | 金額 |','|------|------|','| 契約金額（税込） | [要記入: 契約金額]円 |','| 契約金額（税抜） | [要記入: 契約金額（税抜）]円 |','','※ 事業予算額 金8,000,000円（税込）の範囲内であることを確認済みである。','','...(以下、添付書類・決裁欄が続く — 全155行)'
+    ]
+  },
+  {
+    id:2, title:'広報・PR文', agent:'pr-writer',
+    prompt:'ひろしま秋の食と酒まつり2026のプレスリリース・SNS投稿文・Web記事を作成してください。機密情報チェックを実施し、未公開情報はプレースホルダー化してください。',
+    lines:[
+'# 「ひろしま秋の食と酒まつり2026」広報文一式（v2）','','> **v2 改訂内容**: リファレンスに基づき、HIT実際の広報パターンに準拠して全面改訂。','> **v1からの主な変更点**:','> - プレスリリース: ひろくまセクション・観光大使プログラム言及を追加','> - X投稿: ／ ＼フレーミング＋フォロー&RT形式に変更','> - Instagram: 3層ハッシュタグ戦略適用','> - Web記事: Dive! Hiroshima特集記事パターンに準拠','','> **機密性チェック結果**: 本文中に以下の未公開・未確定情報を検出し、プレースホルダー化済み。','> - [確定後に記入: ゲストシェフ名] — 出演者が未確定','> - [解禁後に記入: 来場見込数] — 来場見込が未公表','> - [確定後に記入: 特別協賛企業名] — 協賛企業が交渉中','','---','','# 形式1: プレスリリース','','---','','報道関係者各位','令和８年[解禁後に記入: 発信日]','一般社団法人広島県観光連盟','','## 広島の「食」と「酒」を五感で楽しむ！「ひろしま秋の食と酒まつり2026」を初開催！！','','〜 瀬戸内の牡蠣、県内蔵元の地酒、お好み焼き名店が広島城に大集結。ひろくまも来るけぇね！ 〜','','一般社団法人広島県観光連盟（所在地：広島市中区、会長：[要記入: 会長名]、以下「HIT」）は、','令和８年10月[解禁後に記入: 開催日程]に、広島城二の丸広場及び周辺エリアにおいて、','「ひろしま秋の食と酒まつり2026」を初開催いたします。','','### ■ 開催概要','','| 項目 | 内容 |','|------|------|','| イベント名 | ひろしま秋の食と酒まつり2026 |','| 開催日程 | 令和８年10月[解禁後に記入: 開催日程] |','| 会場 | 広島城二の丸広場及び周辺エリア |','| 来場見込 | [解禁後に記入: 来場見込数]人 |','| 入場料 | 無料（飲食は有料。フードチケット制） |','','# 形式2: SNS投稿文（X / Instagram / Facebook）','','# 形式3: Web記事（Dive! Hiroshima 特集記事パターン準拠）','','...(全473行 — プレスリリース・SNS3媒体・Web記事の5形式を同時生成)'
+    ]
+  },
+  {
+    id:3, title:'ナレッジ共有', agent:'knowledge-base',
+    prompt:'営業部の新任職員向けオンボーディングガイドを作成してください。年間1/3が異動する組織構造を踏まえ、4週間で独り立ちできるガイドを設計してください。',
+    lines:[
+'# 新任職員向けオンボーディングガイド — 営業部（セールス事業部）','','対象: 営業部（セールス事業部） 新任職員','作成日: 2026年3月4日','カテゴリ: レベル2（部門固有） > 営業部 > オンボーディング','','> **注意（R-4準拠）**: 本資料はAIを活用して生成した内容を含む。記載内容は必ず上長または先任職員に確認の上、事実関係を検証すること。','','---','','## 本資料の目的と使い方','','営業部（セールス事業部）は6名体制で、HIT全部門の中で最も業務負荷が高い部署である。','HITでは年間約1/3の職員が異動するため、業務知識の引継ぎが構造的な課題となっている。','本ガイドは、新任職員が4週間で独り立ちできる状態を目指して設計したものである。','','---','','## Week 1: 基本事項（組織・制度・ツールの理解）','','### Day 1-2: 組織の理解','','- [ ] HIT（一般社団法人広島県観光連盟）の組織図と各部門の役割を把握する','- [ ] 決裁フローを理解する','  - 起案文書は1契約につき最低4回の決裁サイクルが発生する:','    1. 予算執行伺い → 2. 契約締結伺い → 3. 検査結果通知 → 4. 支出伺い','- [ ] ITツールのセットアップを完了する','  - M365 Business Premium / HubSpot / JobCan','','### Day 3-5: 業務の全体像','','- [ ] 営業部の4つの主要業務領域:','  1. 観光商品企画','  2. 旅行会社対応','  3. イベント運営','  4. 協賛・連携','','## Week 2: 業務習熟（前半）— 観光商品企画 / 旅行会社対応','## Week 3: 業務習熟（後半）— イベント運営 / 協賛・連携','## Week 4: 実践と独り立ち（チェックリスト付き）','','...(全452行 — 4週間の体系的プログラム + FAQ + AI活用ガイド)'
+    ]
+  },
+  {
+    id:4, title:'仕様書作成', agent:'proposal-drafter',
+    prompt:'令和8年度観光デジタルコンテンツ制作及びSNS運用業務の仕様書を作成してください。予算800万円、著作権帰属条項・個人情報保護条項を含めてください。',
+    lines:[
+'# 仕様書','','## 令和８年度広島県観光デジタルコンテンツ制作及びSNS運用業務','','---','','### １ 業務名','','令和８年度広島県観光デジタルコンテンツ制作及びSNS運用業務','','### ２ 業務目的','','広島県は、瀬戸内海の多島美、世界遺産（原爆ドーム、厳島神社）、豊かな食文化等の観光資源を有しており、国内外からの誘客促進に向けた情報発信の強化が求められている。','','### ３ 業務概要','','本業務は、以下の４つの業務項目により構成される。','（１）デジタルコンテンツの企画・制作','（２）SNSアカウントの運用・管理','（３）インフルエンサー等を活用した情報拡散','（４）効果測定及び報告','','### ４ 業務内容（詳細）','','#### （１）デジタルコンテンツの企画・制作','- 動画コンテンツ: 年間24本以上（短尺動画15秒〜60秒、縦型9:16）','- 静止画素材: 年間100枚以上','- 記事コンテンツ: 年間12本以上（SEO対応）','','#### （２）SNSアカウントの運用・管理','- 対象: Instagram / Facebook / X','- 投稿頻度: 各アカウント週3回以上','- コメント・DM対応: 原則24時間以内','','### ５ 委託期間','','契約締結の日から令和９年３月31日まで','','### ６ 事業予算額','','金8,000,000円（消費税及び地方消費税を含む。）を上限とする。','','### ７ 成果物','','| No. | 成果物 | 仕様 | 納品期限 |','|-----|--------|------|---------|','| 1 | 動画コンテンツ | 24本以上（MP4、フルHD以上） | 各制作完了後 |','| 2 | 静止画素材 | 100枚以上（JPEG/PNG、3000px以上） | 各撮影完了後 |','| 3 | 記事コンテンツ | 12本以上 | 各制作完了後 |','','...(全133行 — 再委託制限・著作権・個人情報保護・機密保持条項を含む)'
+    ]
+  },
+  {
+    id:5, title:'情報収集・要約', agent:'researcher',
+    prompt:'観光分野のAIコンシェルジュ導入事例を調査してください。Dive! HiroshimaとKINSAIアプリへのAI機能追加を検討中です。事例・費用対効果・技術比較を含めてください。',
+    lines:[
+'# 観光分野におけるAIコンシェルジュ導入事例と効果 リサーチレポート（詳細）','','調査日: 2026年2月26日','形式: B（詳細レポート）','','---','','## エグゼクティブサマリー','','観光分野におけるAIチャットボット・コンシェルジュの導入は、2023年以降の生成AI普及を契機に急速に進展している。国内では観光庁が2025年5月に「生成AI活用の手引書」を公開し、自治体・DMOでの活用を積極的に推進。','','導入先進事例として、JR東海「JRTok-AI」、Kotozna「ConcierGAI」（JTBグループ採用）、ナビタイムジャパン「地域専用AIアシスタント」、MATCHAのAIチャットボットが確認された。','','## 事例調査（6件）','','### JR東海「JRTok-AI」','- 東海道新幹線沿線の観光情報を対話形式で提供','- ソース: https://jrtok-ai.jp/','','### Kotozna「ConcierGAI」（JTBグループ採用）','- 109言語対応のAIコンシェルジュ（宿泊施設向け）','- QRコード読み取りで母国語対応','- ソース: https://www.jtbcorp.jp/jp/newsroom/...','','### MATCHA AIチャットボット','- 既存記事をRAGのナレッジベースとして活用 ★HITに最も参考になるモデル','- Dive! Hiroshimaの記事資産で同様のアプローチが可能','','## 費用対効果データ','','| 指標 | 報告値 |','|------|-------|','| 問い合わせ自動化率 | 60〜80% |','| 電話問い合わせ削減率 | 20〜40% |','| 導入初期コスト | 数十万円〜数百万円（SaaS型） |','','## HITへの提言','- 短期: Dive! Hiroshima記事のRAG活用チャットボット','- 中期: ひろくまAIアバター・広島弁対応コンシェルジュ','','...(全304行 — 26ソース付き・ハルシネーション4件自動修正済み)'
+    ]
+  },
+  {
+    id:6, title:'SNSデータ分析', agent:'sns-analyzer',
+    prompt:'2026年1月のSNS月次レポートを作成してください。Instagram・X・Facebook・TikTokの4媒体を分析し、KPIダッシュボード・コンテンツ分析・来月のアクション提案を含めてください。',
+    lines:[
+'# SNS月次レポート 2026年1月','','> 対象期間: 2026年1月1日〜1月31日','> 主管部署: メディアプロモーション部','','---','','## 1. エグゼクティブサマリー','','- Instagram フォロワー49,800到達。冬の宮島・牡蠣コンテンツが好調','  リール「冬の厳島神社 朝焼きの回廊」が月間最高エンゲージメント（いいね4,200件）','- X「#やっぱ広島じゃ 2026」キャンペーンでフォロワー+380（+2.4%）','- TikTok ひろくまお正月アニメーション 完全視聴率68%（過去最高）','- ⚠️ Facebook リーチ-8.2%減少が継続 → 動画比率引上げが急務','','## 2. KPIダッシュボード','','### アカウント全体サマリー','','| 指標 | 当月 | 前月比 | 前年同月比 |','|------|------|--------|----------|','| 総フォロワー数（4媒体） | 74,530 | +1,110（+1.5%） | +7,330（+10.9%） |','| 平均エンゲージメント率 | 5.82% | +0.24pt | +0.35pt |','| 総インプレッション数 | 1,082,000 | -13.1% | +14.1% |','','### Instagram (@visit_hiroshima)','| フォロワー数 | 49,800 | +480（+1.0%） | +5,700（+12.9%） |','| エンゲージメント率 | 6.77% | +0.31pt | +0.30pt |','','### X (@kanko_hiroshima)','| フォロワー数 | 16,200 | +380（+2.4%） | +1,700（+11.7%） |','','### TikTok (@hirokuma_)','| フォロワー数 | 3,200 | +200（+6.7%） — 全媒体最高増加率 |','','## 3. トップパフォーマンス投稿（TOP5）','| 1位 | 「冬の厳島神社 朝焼きの回廊」リール | IG | 9.8% |','| 2位 | ひろくま年始挨拶 | X | 12.4%（RT率2.8倍） |','| 3位 | 「宮島の冬牡蠣 炭火焼きの音」ASMR | IG | 8.2% |','','## 6. アクション提案（来月5件）','','...(全350行 — 4媒体詳細分析・デモグラフィック・競合比較・投稿一覧付き)'
+    ]
+  },
+  {
+    id:7, title:'観光データ分析', agent:'tourism-data-analyzer',
+    prompt:'広島県の2025年10月観光動向データを分析してください。時系列分析・地域別分析・客層別分析・競合ベンチマーク・施策提言を含めてください。',
+    lines:[
+'# 月次動向レポート 分析レポート','','分析対象期間: 2025年10月','データソース: 観光庁「宿泊旅行統計調査」、JNTO「訪日外客統計」','','---','','## 1. エグゼクティブサマリー','','- 延べ宿泊者数: 約152万人泊（前年同月比+6.8%）','- インバウンド宿泊者数: 約28.5万人泊（前年同月比+22.3%）','- 客室稼働率: 72.4%（全国平均68.2%を上回る）','- 宮島エリア: 前月比+15.2%（紅葉シーズン＋外国人比率30.4%）','- 近隣県比較: 中国・四国5県中 宿泊者数1位、外国人比率1位','','## 2. 主要KPI','','| 指標 | 当月 | 前年同月比 |','|------|------|----------|','| 延べ宿泊者数 | 1,520,000人泊 | +6.8% |','| 外国人宿泊者数 | 285,000人泊 | +22.3% |','| 客室稼働率 | 72.4% | +3.5pt |','| 外国人比率 | 18.8% | +2.4pt |','','## 3. 地域別分析','','| エリア | 宿泊者数 | 構成比 | 外国人比率 |','|--------|---------|--------|----------|','| 広島市 | 72.5万 | 47.7% | 20.0% |','| 宮島 | 28.0万 | 18.4% | 30.4%（最高） |','| 尾道 | 18.5万 | 12.2% | 16.2% |','| 呉 | 10.0万 | 6.6% | 8.0%（最低） |','','## 4. 国籍別分析','| 韓国 20.4% | 台湾 18.2% | 米国 14.0% | 中国 12.3%（+35.2%最速回復） |','','## 5. 競合ベンチマーク（中国・四国5県）','| 広島県: 宿泊者数1位 | 島根県: 伸び率1位（+8.1%） |','','...(全321行 — 7分析軸・付録データテーブル4本付き)'
+    ]
+  },
+  {
+    id:8, title:'会議・プレゼン資料', agent:'meeting-assistant',
+    prompt:'情報発信事業PJ定例会議（2/20開催）の録音データを処理してください。アクションアイテム一覧・次回アジェンダ・議事録の3点を出力してください。',
+    lines:[
+'# 令和8年度情報発信事業プロジェクト定例会議 — 会議処理結果','','> 機密性チェック: 実施済み（変数置換適用済み）','','---','','# Part 1: アクションアイテム一覧','','| No. | アクション | 担当 | 期限 | 優先度 |','|-----|-----------|------|------|--------|','| 1 | リール比率の変更案を作成 | 担当者A（メディアP部） | 02/27 | 高 |','| 2 | インフルエンサーA氏の契約条件確認 | 担当者B（営業部） | 03/06 | 高 |','| 3 | 効果測定の中間報告書作成 | 担当者A | 03/15 | 中 |','| 4 | GA4データ連携を情シスに確認 | 担当者C（企画総務部） | 02/27 | 中 |','| 5 | 次回会議の日程調整 | 担当者C | 03/06 | 中 |','','---','','# Part 2: 次回アジェンダ（案）','','| No. | 議題 | 担当 | 時間 |','|-----|------|------|------|','| 1 | 前回アクションアイテム進捗確認 | 全員 | 10分 |','| 2 | SNSコンテンツ制作（リール比率変更案） | 担当者A | 15分 |','| 3 | インフルエンサー施策（契約条件報告） | 担当者B | 15分 |','| 4 | 効果測定（GA4連携・Instagram施策） | 担当者A/C | 15分 |','| 5 | 中間報告書の方向性確認 | 担当者A | 10分 |','| 6 | その他・次回日程調整 | 全員 | 5分 |','','---','','# Part 3: 議事録','','## 1. SNSコンテンツ制作の進捗','- 動画コンテンツ: 全24本中12本完了、残り12本は来月中に完成予定','- リール形式の投稿が通常投稿の約2倍のリーチ','- → リール比率を増やす方向で検討（担当者Aが変更案作成）','','## 2. インフルエンサー施策','- フォロワーX万人のインフルエンサーA氏と交渉中','- 予算Y万円枠内で調整する方針','','## 3. 効果測定の中間報告','- KPI達成状況は概ね順調','- Instagramフォロワー数: 目標の80%到達（残り20%の施策検討が必要）','','...(全141行 — 3パート構成・アクション→アジェンダ→議事録)'
+    ]
+  },
+  {
+    id:9, title:'電話応対マニュアル', agent:'knowledge-base',
+    prompt:'全職員向けの電話応対マニュアルを作成してください。基本フロー・FAQ・敬語例文・季節別の頻出問い合わせ・部署案内を含めてください。',
+    lines:[
+'# 電話応対マニュアル','','対象: 全職員（主管: 企画総務部）','','> 背景: HITでは年間約1/3の職員が異動しており、標準化された電話応対マニュアルが不在のため、新任職員が応対に困惑する状況が構造的に発生していた。','','---','','## 1. 電話応対の基本フロー','','受電（3コール以内）','  │','  ├─ Step 1: 初動（名乗り・挨拶）','  ├─ Step 2: 用件確認（所属・氏名・要件）','  ├─ Step 3: 対応判断','  │    ├─ 自分で回答 → 回答','  │    ├─ 他部署 → 取次','  │    └─ 担当者不在 → 折返し案内','  └─ Step 4: クロージング（復唱・挨拶）','','## 2. よくある問い合わせパターン別FAQ（13件）','','Q1: 宮島へのアクセス → JR+フェリー案内','Q2: 原爆ドーム → 路面電車「原爆ドーム前」下車','Q3: しまなみ海道 → 尾道〜今治 約60km サイクリング案内','Q8: プレス取材 → メディアプロモーション部へ取次','Q13: 広島県/広島市との混同 → 別組織であることを案内','','## 3. 敬語例文集（避けるべき表現7パターン含む）','','| 避けるべき | 正しい |','|-----------|--------|','| 「わかりません」 | 「確認いたしまして、折り返しご連絡いたします」 |','| 「もしもし」 | 使用しない（名乗りから始める） |','| 「了解しました」 | 「かしこまりました」 |','','## 4. 季節別の頻出問い合わせ','','春: 桜の開花状況・GWイベント','夏: 海水浴場・花火大会・平和記念式典','秋: 紅葉の見頃・牡蠣シーズン','冬: 牡蠣祭り・温泉地・イルミネーション','','## 5. 部署案内一覧（取次先早見表）','','...(全486行 — 新人初日から使える実践マニュアル)'
+    ]
+  },
+  {
+    id:10, title:'出張関連書類', agent:'concept-demo',
+    prompt:'東京出張（3/20-21、観光庁意見交換会）の書類を一括作成してください。航空券2社以上・3見積以上の比較表、出張申請書、精算書テンプレートを含めてください。',
+    lines:[
+'# 出張関連書類セット：東京出張（2026年3月20日〜21日）','','> 出張先: 東京（羽田空港）','> 日程: 2026年3月20日（木）〜 3月21日（金）','> 目的: 観光庁との意見交換会出席','','---','','## 1. 航空券比較表（広島〜羽田 3社比較）','','> 規程に基づき、航空券は2社以上から3見積以上を取得する必要があります。','','### 往路：広島 → 羽田（3月20日・朝便）','','| No. | 航空会社 | 便名 | 出発 | 到着 | 参考価格（片道） |','|:---:|----------|------|:----:|:----:|:----------------:|','| 1 | ANA | NH 674 | 07:25 | 08:50 | 27,500円 |','| 2 | JAL | JL 262 | 07:35 | 09:00 | 28,000円 |','| 3 | ★スカイマーク | BC 082 | 07:45 | 09:20 | 15,800円 |','','### 往復合計比較','','| 航空会社 | 往復合計 | 差額（最安比） |','|----------|--------:|:--------------:|','| ANA | 54,500円 | +23,500円 |','| JAL | 55,500円 | +24,500円 |','| ★スカイマーク | 31,000円 | --- 最安 --- |','','> 推奨: スカイマーク利用で往復31,000円（ANA比 約23,500円の節約）','','---','','## 2. 出張申請書ドラフト','','| 項目 | 内容 |','|------|------|','| 出張先 | 東京都千代田区（観光庁） |','| 期間 | 2026年3月20日〜21日（1泊2日） |','| 目的 | 観光庁との意見交換会出席 |','','#### 経費概算','','| 費目 | 金額 |','|------|-----:|','| 航空券（スカイマーク往復） | 31,000円 |','| 空港アクセスバス（往復） | 2,700円 |','| 都内移動 | 2,000円 |','| 宿泊費（規程上限内） | 8,700円 |','| 日当（2日分） | 4,400円 |','| **合計** | **48,800円** |','','## 3. 出張精算書テンプレート（領収書チェックリスト付き）','','...(全172行 — 3文書一括生成・規程準拠)'
+    ]
+  }
+];
+
+let currentCase = null;
+let lineIndex = 0;
+let timer = null;
+let speed = 1;
+let isPlaying = false;
+let phase = 'idle'; // idle, banner, wait1, command, thinking, output, done
+
+// Build sidebar
+const caseList = document.getElementById('caseList');
+CASES.forEach(c => {
+  const btn = document.createElement('button');
+  btn.className = 'case-btn';
+  btn.innerHTML = `<span class="case-num">CASE ${String(c.id).padStart(2,'0')}</span><span class="case-title">${c.title}</span><span class="case-agent">${c.agent}</span>`;
+  btn.onclick = () => selectCase(c);
+  btn.id = `btn-${c.id}`;
+  caseList.appendChild(btn);
+});
+
+function selectCase(c) {
+  stop();
+  currentCase = c;
+  lineIndex = 0;
+  phase = 'idle';
+  document.querySelectorAll('.case-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(`btn-${c.id}`).classList.add('active');
+  document.getElementById('titlebarText').textContent = `Terminal — agents/${c.agent}`;
+  document.getElementById('progressFill').style.width = '0%';
+  document.getElementById('statusText').textContent = '準備完了';
+
+  const term = document.getElementById('terminal');
+  term.innerHTML = '';
+
+  // Show banner immediately
+  const banner = [
+    '',
+    '  \u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510',
+    `  \u2502   CASE ${String(c.id).padStart(2,'0')}: ${c.title.padEnd(36)}\u2502`,
+    `  \u2502   Agent: ${c.agent.padEnd(36)}\u2502`,
+    '  \u2502                                                 \u2502',
+    '  \u2502   HIT AI\u696d\u52d9\u81ea\u52d5\u5316\u30c7\u30e2                         \u2502',
+    '  \u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518',
+    ''
+  ];
+  banner.forEach(l => addLine(l, 'banner'));
+  addLine('  Starting Claude Code...', 'thinking');
+  addLine('', '');
+
+  // Auto-play
+  setTimeout(() => play(), 500);
+}
+
+function addLine(text, cls) {
+  const term = document.getElementById('terminal');
+  const div = document.createElement('div');
+  div.className = `line ${cls||''}`;
+
+  if (cls === 'heading' || text.startsWith('#')) {
+    div.className = 'line heading';
+  } else if (text.startsWith('|') || text.startsWith('---')) {
+    div.className = 'line table-line';
+  } else if (text.startsWith('>') || text.startsWith('※') || text.includes('...')) {
+    div.className = 'line highlight';
+  }
+
+  div.textContent = text;
+  term.appendChild(div);
+  term.scrollTop = term.scrollHeight;
+}
+
+function play() {
+  if (!currentCase) return;
+  isPlaying = true;
+  document.getElementById('btnPlay').innerHTML = '&#9646;&#9646; \u4e00\u6642\u505c\u6b62';
+  document.getElementById('statusText').textContent = '\u5b9f\u884c\u4e2d...';
+
+  if (phase === 'idle') {
+    phase = 'command';
+    // Show command
+    addLine(`  $ claude -p "${currentCase.prompt.substring(0,80)}..."`, 'command');
+    addLine('', '');
+
+    // Show thinking animation
+    let dots = 0;
+    const thinkDiv = document.createElement('div');
+    thinkDiv.className = 'line thinking';
+    thinkDiv.id = 'thinkingLine';
+    thinkDiv.textContent = '  \u2728 Thinking...';
+    document.getElementById('terminal').appendChild(thinkDiv);
+
+    const thinkTimer = setInterval(() => {
+      dots = (dots + 1) % 4;
+      thinkDiv.textContent = '  \u2728 Thinking' + '.'.repeat(dots + 1);
+    }, 300);
+
+    setTimeout(() => {
+      clearInterval(thinkTimer);
+      thinkDiv.remove();
+      addLine('', '');
+      phase = 'output';
+      lineIndex = 0;
+      streamOutput();
+    }, 2000 / speed);
+  } else if (phase === 'output') {
+    streamOutput();
+  }
+}
+
+function streamOutput() {
+  if (!isPlaying || !currentCase || phase !== 'output') return;
+  if (lineIndex >= currentCase.lines.length) {
+    phase = 'done';
+    addLine('', '');
+    addLine('  \u2705 Done. Output saved.', 'thinking');
+    addLine('', '');
+    document.getElementById('progressFill').style.width = '100%';
+    document.getElementById('statusText').textContent = '\u5b8c\u4e86';
+    document.getElementById('btnPlay').innerHTML = '&#9654; \u518d\u751f';
+    isPlaying = false;
+    // Auto-trigger document preview
+    triggerDocConversion();
+    return;
+  }
+
+  addLine(currentCase.lines[lineIndex], '');
+  lineIndex++;
+
+  // Update progress
+  const pct = Math.round((lineIndex / currentCase.lines.length) * 100);
+  document.getElementById('progressFill').style.width = pct + '%';
+
+  // Variable delay based on content
+  let delay = 60 / speed;
+  const line = currentCase.lines[lineIndex - 1];
+  if (line === '' || line === '---') delay = 20 / speed;
+  else if (line.startsWith('#')) delay = 120 / speed;
+  else if (line.startsWith('|')) delay = 40 / speed;
+
+  timer = setTimeout(streamOutput, delay);
+}
+
+function stop() {
+  isPlaying = false;
+  if (timer) { clearTimeout(timer); timer = null; }
+  document.getElementById('btnPlay').innerHTML = '&#9654; \u518d\u751f';
+}
+
+function togglePlay() {
+  if (isPlaying) {
+    stop();
+    document.getElementById('statusText').textContent = '\u4e00\u6642\u505c\u6b62';
+  } else {
+    if (phase === 'done') {
+      restart();
+    } else {
+      play();
+    }
+  }
+}
+
+function restart() {
+  if (currentCase) selectCase(currentCase);
+}
+
+function setSpeed(s, el) {
+  speed = s;
+  document.querySelectorAll('.speed-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+}
+
+// Document format labels
+const DOC_FORMATS = {
+  1: {badge:'起案書', label:'起案書フォーマット'},
+  2: {badge:'広報文', label:'プレスリリース・SNS・Web記事'},
+  3: {badge:'ガイド', label:'オンボーディングガイド'},
+  4: {badge:'仕様書', label:'仕様書フォーマット'},
+  5: {badge:'レポート', label:'リサーチレポート'},
+  6: {badge:'ダッシュボード', label:'SNS KPIダッシュボード'},
+  7: {badge:'データ分析', label:'観光データダッシュボード'},
+  8: {badge:'会議資料', label:'会議処理結果'},
+  9: {badge:'マニュアル', label:'電話応対マニュアル'},
+  10:{badge:'出張書類', label:'出張関連書類セット'}
+};
+
+function triggerDocConversion() {
+  if (!currentCase) return;
+  const term = document.getElementById('terminal');
+  // Show converting animation after a pause
+  setTimeout(() => {
+    addLine('', '');
+    const convertDiv = document.createElement('div');
+    convertDiv.className = 'line';
+    convertDiv.innerHTML = '  <span class="converting-msg"><span class="spinner"></span> 文書フォーマットに変換中...</span>';
+    term.appendChild(convertDiv);
+    term.scrollTop = term.scrollHeight;
+    document.getElementById('statusText').textContent = '変換中...';
+
+    // Show document preview after conversion animation
+    setTimeout(() => {
+      convertDiv.innerHTML = '  <span style="color:#3fb950;">&#x2705; 文書フォーマットへの変換が完了しました</span>';
+      addLine('', '');
+      // Add clickable link
+      const linkDiv = document.createElement('div');
+      linkDiv.className = 'line';
+      linkDiv.innerHTML = '  <span style="color:#79c0ff;cursor:pointer;text-decoration:underline;" onclick="openDocPreview()">&#x1F4C4; ' + DOC_FORMATS[currentCase.id].label + 'を表示</span>';
+      term.appendChild(linkDiv);
+      term.scrollTop = term.scrollHeight;
+      document.getElementById('statusText').textContent = '完了';
+
+      // Auto-open document preview
+      setTimeout(() => openDocPreview(), 600);
+    }, 1800 / speed);
+  }, 1200 / speed);
+}
+
+function openDocPreview() {
+  if (!currentCase) return;
+  const fmt = DOC_FORMATS[currentCase.id];
+  document.getElementById('dpBadge').textContent = fmt.badge;
+  document.getElementById('dpTitle').textContent = fmt.label;
+  document.getElementById('docIframe').src = 'document-viewer.html?case=' + currentCase.id;
+  document.getElementById('docOverlay').classList.add('show');
+}
+
+function closeDocPreview() {
+  document.getElementById('docOverlay').classList.remove('show');
+  document.getElementById('docIframe').src = '';
+}
+
+// Listen for close message from iframe
+window.addEventListener('message', e => {
+  if (e.data && e.data.type === 'closeDocViewer') closeDocPreview();
+});
+
+// Keyboard shortcuts
+document.addEventListener('keydown', e => {
+  // Close doc preview on Escape
+  if (e.code === 'Escape') { closeDocPreview(); return; }
+  // Don't handle shortcuts if doc preview is open
+  if (document.getElementById('docOverlay').classList.contains('show')) return;
+  if (e.code === 'Space') { e.preventDefault(); togglePlay(); }
+  if (e.code === 'KeyR') restart();
+  if (e.code === 'ArrowDown' || e.code === 'ArrowRight') {
+    const idx = CASES.findIndex(c => c === currentCase);
+    if (idx < CASES.length - 1) selectCase(CASES[idx + 1]);
+  }
+  if (e.code === 'ArrowUp' || e.code === 'ArrowLeft') {
+    const idx = CASES.findIndex(c => c === currentCase);
+    if (idx > 0) selectCase(CASES[idx - 1]);
+  }
+});
+</script>
+</body>
+</html>

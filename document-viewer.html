@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HIT AI研修 — 文書プレビュー</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@400;700&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:#f0f2f5;font-family:'Noto Sans JP',sans-serif;color:#1a1a2e;min-height:100vh;}
+
+/* Toolbar */
+.toolbar{position:sticky;top:0;z-index:100;background:#1a1a2e;color:#fff;display:flex;align-items:center;gap:12px;padding:10px 24px;box-shadow:0 2px 8px rgba(0,0,0,.3);}
+.toolbar .badge{background:#e94560;color:#fff;padding:4px 12px;border-radius:4px;font-size:12px;font-weight:700;letter-spacing:.5px;}
+.toolbar .doc-title{font-size:15px;font-weight:700;flex:1;}
+.toolbar .doc-meta{font-size:11px;color:#8b949e;}
+.toolbar button{background:#0f3460;border:none;color:#fff;padding:8px 16px;border-radius:6px;font-size:12px;cursor:pointer;font-family:'Noto Sans JP',sans-serif;transition:background .2s;}
+.toolbar button:hover{background:#16213e;}
+.toolbar button.print-btn{background:#e94560;}
+.toolbar button.print-btn:hover{background:#d63851;}
+
+/* Paper */
+.paper-wrap{max-width:900px;margin:32px auto;padding:0 16px 64px;}
+.paper{background:#fff;border-radius:4px;box-shadow:0 2px 16px rgba(0,0,0,.08);padding:48px 56px;position:relative;min-height:600px;}
+.paper::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,#e94560,#0f3460);}
+
+/* Typography */
+.doc-h1{font-size:22px;font-weight:700;text-align:center;margin-bottom:8px;color:#1a1a2e;border-bottom:3px double #1a1a2e;padding-bottom:12px;}
+.doc-h2{font-size:17px;font-weight:700;color:#0f3460;margin:28px 0 12px;padding:6px 0 6px 12px;border-left:4px solid #e94560;}
+.doc-h3{font-size:14px;font-weight:700;color:#1a1a2e;margin:20px 0 8px;}
+.doc-p{font-size:13px;line-height:1.9;margin-bottom:12px;}
+.doc-note{font-size:11px;color:#666;background:#f8f9fa;border-left:3px solid #ccc;padding:8px 12px;margin:12px 0;border-radius:0 4px 4px 0;}
+.doc-em{color:#e94560;font-weight:700;}
+
+/* Tables */
+.doc-table{width:100%;border-collapse:collapse;margin:12px 0 20px;font-size:12px;}
+.doc-table th{background:#1a1a2e;color:#fff;padding:8px 12px;text-align:left;font-weight:500;font-size:11px;}
+.doc-table td{padding:8px 12px;border-bottom:1px solid #e8e8e8;vertical-align:top;}
+.doc-table tr:nth-child(even){background:#fafbfc;}
+.doc-table tr:hover{background:#f0f4ff;}
+.doc-table .num{text-align:right;font-family:monospace;font-size:12px;}
+.doc-table .highlight-row{background:#fff3f5!important;font-weight:700;}
+
+/* Stamps (起案書用) */
+.stamp-row{display:flex;justify-content:flex-end;gap:0;margin:24px 0;}
+.stamp-box{width:72px;text-align:center;border:2px solid #c00;font-size:10px;}
+.stamp-box .stamp-label{background:#c00;color:#fff;padding:2px 0;font-weight:700;}
+.stamp-box .stamp-space{height:52px;display:flex;align-items:center;justify-content:center;color:#ccc;font-size:9px;}
+.stamp-box .stamp-date{border-top:1px solid #c00;padding:2px 0;font-size:9px;color:#999;}
+
+/* Header info (起案書用) */
+.header-info{display:grid;grid-template-columns:120px 1fr;gap:0;border:1px solid #333;margin:16px 0 24px;font-size:12px;}
+.header-info dt{background:#f5f5f5;padding:6px 12px;border-bottom:1px solid #ddd;border-right:1px solid #ddd;font-weight:700;}
+.header-info dd{padding:6px 12px;border-bottom:1px solid #ddd;}
+
+/* Dashboard cards */
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin:20px 0;}
+.kpi-card{background:#fff;border:1px solid #e8e8e8;border-radius:8px;padding:16px;text-align:center;position:relative;overflow:hidden;}
+.kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
+.kpi-card.ig::before{background:#E4405F;}
+.kpi-card.x::before{background:#1DA1F2;}
+.kpi-card.fb::before{background:#1877F2;}
+.kpi-card.tk::before{background:#000;}
+.kpi-card.green::before{background:#28a745;}
+.kpi-card.blue::before{background:#0f3460;}
+.kpi-card.orange::before{background:#f59e0b;}
+.kpi-card.red::before{background:#e94560;}
+.kpi-card .kpi-label{font-size:11px;color:#666;margin-bottom:4px;}
+.kpi-card .kpi-value{font-size:28px;font-weight:700;color:#1a1a2e;font-family:monospace;}
+.kpi-card .kpi-change{font-size:11px;margin-top:4px;font-weight:700;}
+.kpi-card .kpi-change.up{color:#28a745;}
+.kpi-card .kpi-change.down{color:#e94560;}
+
+/* Status badges */
+.badge-high{background:#e94560;color:#fff;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;}
+.badge-mid{background:#f59e0b;color:#fff;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;}
+.badge-low{background:#28a745;color:#fff;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;}
+.badge-status{background:#e8e8e8;color:#666;padding:2px 8px;border-radius:10px;font-size:10px;}
+
+/* Flowchart */
+.flow-chart{display:flex;flex-direction:column;align-items:center;gap:0;margin:20px 0;}
+.flow-box{background:#0f3460;color:#fff;padding:10px 24px;border-radius:8px;font-size:13px;font-weight:700;min-width:240px;text-align:center;}
+.flow-arrow{font-size:20px;color:#0f3460;line-height:1;}
+.flow-branch{display:flex;gap:16px;align-items:flex-start;}
+.flow-branch .flow-option{background:#f0f4ff;border:2px solid #0f3460;padding:8px 16px;border-radius:6px;font-size:11px;text-align:center;flex:1;}
+
+/* Tabs */
+.tab-bar{display:flex;border-bottom:2px solid #e8e8e8;margin:20px 0 0;}
+.tab-btn{padding:8px 20px;background:transparent;border:none;font-size:13px;font-family:'Noto Sans JP',sans-serif;color:#666;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .2s;}
+.tab-btn:hover{color:#1a1a2e;}
+.tab-btn.active{color:#e94560;border-bottom-color:#e94560;font-weight:700;}
+.tab-content{display:none;padding:20px 0;}
+.tab-content.active{display:block;}
+
+/* Checklist */
+.checklist{list-style:none;margin:12px 0;}
+.checklist li{padding:6px 0 6px 28px;position:relative;font-size:13px;line-height:1.6;}
+.checklist li::before{content:'';position:absolute;left:0;top:8px;width:16px;height:16px;border:2px solid #0f3460;border-radius:3px;}
+.checklist li.done::before{background:#0f3460;border-color:#0f3460;}
+.checklist li.done::after{content:'✓';position:absolute;left:3px;top:5px;color:#fff;font-size:12px;font-weight:700;}
+
+/* Comparison highlight */
+.recommend{background:#e8f5e9!important;border-left:4px solid #28a745;}
+.recommend td:first-child::before{content:'★ ';color:#28a745;}
+
+/* Print */
+@media print{
+  body{background:#fff;}
+  .toolbar{display:none;}
+  .paper-wrap{margin:0;padding:0;}
+  .paper{box-shadow:none;padding:24px;border-radius:0;}
+  .paper::before{display:none;}
+  .kpi-grid{grid-template-columns:repeat(2,1fr);}
+}
+</style>
+</head>
+<body>
+
+<div class="toolbar" id="toolbar">
+  <span class="badge" id="docBadge">起案書</span>
+  <span class="doc-title" id="docTitle">文書タイトル</span>
+  <span class="doc-meta" id="docMeta">AI自動生成</span>
+  <button onclick="window.print()" class="print-btn">印刷 / PDF</button>
+  <button onclick="closeViewer()">✕ 閉じる</button>
+</div>
+
+<div class="paper-wrap">
+  <div class="paper" id="paperContent"></div>
+</div>
+
+<script>
+const caseId = new URLSearchParams(window.location.search).get('case') || '1';
+
+const DOCS = {
+  '1': {
+    badge: '起案書', title: '契約締結伺い — 観光デジタルコンテンツ制作等業務',
+    html: `
+      <div class="stamp-row">
+        <div class="stamp-box"><div class="stamp-label">起案</div><div class="stamp-space">印</div><div class="stamp-date">R8.4.22</div></div>
+        <div class="stamp-box"><div class="stamp-label">審査</div><div class="stamp-space">印</div><div class="stamp-date">/ /</div></div>
+        <div class="stamp-box"><div class="stamp-label">合議</div><div class="stamp-space">印</div><div class="stamp-date">/ /</div></div>
+        <div class="stamp-box"><div class="stamp-label">決裁</div><div class="stamp-space">印</div><div class="stamp-date">/ /</div></div>
+      </div>
+      <h1 class="doc-h1">起 案 書</h1>
+      <dl class="header-info">
+        <dt>文書番号</dt><dd>[要記入: 文書番号]</dd>
+        <dt>起案日</dt><dd>令和８年４月22日</dd>
+        <dt>決裁区分</dt><dd>会長決裁</dd>
+        <dt>起案部署</dt><dd>企画総務部</dd>
+        <dt>起案者</dt><dd>[要記入: 起案者氏名]</dd>
+      </dl>
+      <h2 class="doc-h2">件名</h2>
+      <p class="doc-p">令和８年度広島県観光デジタルコンテンツ制作及びSNS運用業務委託契約の締結について</p>
+      <h2 class="doc-h2">要旨（起案理由）</h2>
+      <p class="doc-p">令和８年度広島県観光デジタルコンテンツ制作及びSNS運用業務について、公募型プロポーザル方式により受託候補者を選定した結果、下記のとおり最優秀提案者が決定したので、当該事業者と業務委託契約を締結したく伺うものである。</p>
+      <h2 class="doc-h2">内容</h2>
+      <h3 class="doc-h3">１ 契約の目的</h3>
+      <p class="doc-p">広島県の観光資源（瀬戸内海の多島美、世界遺産、豊かな食文化等）を題材としたデジタルコンテンツの企画・制作、SNSアカウントの運用・管理、インフルエンサーを活用した情報拡散及び効果測定を行うもの。</p>
+      <h3 class="doc-h3">２ 契約方式及び選定経過</h3>
+      <p class="doc-p">公募型プロポーザル方式による最優秀提案者との随意契約</p>
+      <table class="doc-table">
+        <tr><th>項目</th><th>内容</th></tr>
+        <tr><td>公告日</td><td>令和８年４月１日</td></tr>
+        <tr><td>参加資格確認申請</td><td>令和８年４月８日締切</td></tr>
+        <tr><td>提案書提出</td><td>令和８年４月14日締切</td></tr>
+        <tr><td>提案書提出者数</td><td>[要記入: 応募者数]社</td></tr>
+        <tr><td>審査会開催日</td><td>[要記入: 審査会日付]</td></tr>
+      </table>
+      <h3 class="doc-h3">３ 契約の相手方</h3>
+      <table class="doc-table">
+        <tr><th>項目</th><th>内容</th></tr>
+        <tr><td>名称</td><td>[要記入: 契約相手方の正式名称]</td></tr>
+        <tr><td>所在地</td><td>[要記入: 所在地]</td></tr>
+        <tr><td>代表者</td><td>[要記入: 代表者名]</td></tr>
+      </table>
+      <h3 class="doc-h3">４ 契約金額</h3>
+      <table class="doc-table">
+        <tr><th>項目</th><th>金額</th></tr>
+        <tr><td>契約金額（税込）</td><td class="num">[要記入: 契約金額]円</td></tr>
+        <tr><td>契約金額（税抜）</td><td class="num">[要記入: 契約金額（税抜）]円</td></tr>
+      </table>
+      <div class="doc-note">※ 事業予算額 金8,000,000円（税込）の範囲内であることを確認済みである。</div>
+      <h3 class="doc-h3">５ 契約期間</h3>
+      <p class="doc-p">契約締結の日から令和９年３月31日まで</p>
+      <h3 class="doc-h3">６ 業務内容</h3>
+      <p class="doc-p">仕様書のとおり。主な業務項目は以下のとおりである。</p>
+      <p class="doc-p" style="padding-left:16px;">
+      （１）デジタルコンテンツの企画・制作（動画24本以上・静止画100枚以上・記事12本以上）<br>
+      （２）SNSアカウントの運用・管理（Instagram・Facebook・X 各週3回以上）<br>
+      （３）インフルエンサー等を活用した情報拡散（フォロワー1万人以上3名以上）<br>
+      （４）効果測定及び報告（月次・中間・最終）
+      </p>
+      <h2 class="doc-h2">添付書類</h2>
+      <ol style="font-size:12px;padding-left:20px;line-height:2;">
+        <li>公募型プロポーザル実施結果報告書</li>
+        <li>提案書審査評価基準及び審査結果一覧表</li>
+        <li>最優秀提案者決定通知書（写）</li>
+        <li>仕様書</li>
+        <li>契約書（案）</li>
+        <li>A社 提案書（写）</li>
+        <li>A社 見積書</li>
+      </ol>
+      <div class="doc-note">※ 本文書はAIによるドラフトです。[要記入] のプレースホルダーを実データに置換し、内容の正確性を確認した上でご利用ください。（R-4 準拠）</div>
+      <p style="text-align:right;font-size:12px;margin-top:32px;color:#666;">一般社団法人広島県観光連盟</p>
+    `
+  },
+
+  '2': {
+    badge: '広報文一式', title: 'ひろしま秋の食と酒まつり2026 — プレスリリース・SNS・Web記事',
+    html: `
+      <h1 class="doc-h1">「ひろしま秋の食と酒まつり2026」広報文一式</h1>
+      <div class="doc-note">機密性チェック実施済み: 未公開情報はプレースホルダー化済み<br>
+      ・[確定後に記入: ゲストシェフ名] — 出演者未確定<br>
+      ・[解禁後に記入: 来場見込数] — 来場見込未公表<br>
+      ・[確定後に記入: 特別協賛企業名] — 協賛企業交渉中</div>
+      <div class="tab-bar">
+        <button class="tab-btn active" onclick="switchTab(this,'t2-press')">プレスリリース</button>
+        <button class="tab-btn" onclick="switchTab(this,'t2-x')">X 投稿</button>
+        <button class="tab-btn" onclick="switchTab(this,'t2-ig')">Instagram</button>
+        <button class="tab-btn" onclick="switchTab(this,'t2-web')">Web記事</button>
+      </div>
+      <div class="tab-content active" id="t2-press">
+        <p class="doc-p" style="font-size:11px;color:#666;">報道関係者各位<br>令和８年[解禁後に記入: 発信日]<br>一般社団法人広島県観光連盟</p>
+        <h2 class="doc-h2" style="text-align:center;border-left:none;padding-left:0;">広島の「食」と「酒」を五感で楽しむ！<br>「ひろしま秋の食と酒まつり2026」を初開催！！</h2>
+        <p class="doc-p" style="text-align:center;font-size:12px;color:#666;">〜 瀬戸内の牡蠣、県内蔵元の地酒、お好み焼き名店が広島城に大集結。ひろくまも来るけぇね！ 〜</p>
+        <table class="doc-table">
+          <tr><th colspan="2" style="text-align:center;">開催概要</th></tr>
+          <tr><td>イベント名</td><td>ひろしま秋の食と酒まつり2026</td></tr>
+          <tr><td>開催日程</td><td>令和８年10月[解禁後に記入: 日程]</td></tr>
+          <tr><td>会場</td><td>広島城二の丸広場及び周辺エリア</td></tr>
+          <tr><td>来場見込</td><td>[解禁後に記入: 来場見込数]人</td></tr>
+          <tr><td>入場料</td><td>無料（飲食はフードチケット制）</td></tr>
+          <tr><td>主催</td><td>一般社団法人広島県観光連盟（HIT）</td></tr>
+        </table>
+        <h3 class="doc-h3">見どころ</h3>
+        <p class="doc-p">
+        ① <strong>「瀬戸内オイスターバー」エリア</strong>: 殻付き生牡蠣、焼き牡蠣、牡蠣フライ等10品以上<br>
+        ② <strong>「広島のお酒横丁」エリア</strong>: 県内全蔵元から厳選した地酒30銘柄以上<br>
+        ③ <strong>「ミタイケン・ステージ」</strong>: ゲストシェフライブクッキング、ひろくまグリーティング
+        </p>
+      </div>
+      <div class="tab-content" id="t2-x">
+        <h3 class="doc-h3">X 投稿文（告知用）</h3>
+        <div style="background:#f8f9fa;border:1px solid #ddd;border-radius:12px;padding:16px;font-size:13px;margin:12px 0;">
+          <p>／<br>
+          &#x1F37B; ひろしま秋の食と酒まつり2026 &#x1F336;<br>
+          ＼<br><br>
+          瀬戸内の牡蠣、県内蔵元の地酒、お好み焼き名店が<br>
+          広島城に大集結&#x1F3EF;<br><br>
+          &#x1F4C5; 10月[要記入]<br>
+          &#x1F4CD; 広島城二の丸広場<br>
+          &#x1F3AB; 入場無料<br><br>
+          ひろくまも来るけぇね&#x1F43B;&#x2728;<br><br>
+          #ひろしま秋の食と酒まつり #広島グルメ<br>
+          #やっぱ広島じゃ #ミタイケンひろしま</p>
+        </div>
+        <p style="font-size:11px;color:#666;">文字数: 約180文字（X制限280文字以内）</p>
+      </div>
+      <div class="tab-content" id="t2-ig">
+        <h3 class="doc-h3">Instagram 投稿文</h3>
+        <div style="background:#f8f9fa;border:1px solid #ddd;border-radius:12px;padding:16px;font-size:13px;margin:12px 0;">
+          <p>
+          &#x1F37B; ひろしま秋の食と酒まつり2026 &#x1F37B;<br><br>
+          広島城に「食」と「酒」の最高が集結！<br>
+          瀬戸内オイスターバーで殻付き牡蠣を&#x1F9AA;<br>
+          県内蔵元の地酒30銘柄を飲み比べ&#x1F376;<br>
+          ひろくまも遊びに来るよ&#x1F43B;&#x2728;<br><br>
+          &#x1F4CD; 広島城二の丸広場<br>
+          &#x1F4C5; 10月[要記入]<br>
+          &#x1F3AB; 入場無料<br><br>
+          #ひろしま秋の食と酒まつり #広島グルメ<br>
+          #広島牡蠣 #広島地酒 #ひろくま<br>
+          #やっぱ広島じゃ #ミタイケンひろしま<br>
+          #hiroshima #visitjapan #japanesefood
+          </p>
+        </div>
+        <p style="font-size:11px;color:#666;">3層ハッシュタグ戦略: ブランド系 + テーマ系 + 発見系</p>
+      </div>
+      <div class="tab-content" id="t2-web">
+        <h3 class="doc-h3">Web記事（Dive! Hiroshima 特集パターン）</h3>
+        <p class="doc-p" style="font-size:20px;font-weight:700;margin:16px 0;">広島城で「食」と「酒」の祭典！ ひろしま秋の食と酒まつり2026を徹底ガイド</p>
+        <p class="doc-p" style="color:#666;font-size:11px;">公開日: [解禁後に記入] ｜ カテゴリ: イベント ｜ エリア: 広島市中区</p>
+        <p class="doc-p">広島城二の丸広場を舞台に、広島の食文化を五感で堪能できるグルメフェスティバルが誕生。瀬戸内の新鮮な牡蠣、県内蔵元の日本酒、そして老舗のお好み焼き — 広島の「おいしい」がすべて揃う秋の一大イベントをご紹介します。</p>
+        <div style="background:#0f3460;color:#fff;padding:16px;border-radius:8px;margin:12px 0;">
+          <p style="font-size:14px;font-weight:700;">&#x1F4CC; この記事でわかること</p>
+          <ul style="font-size:12px;padding-left:20px;margin-top:8px;line-height:2;">
+            <li>イベントの見どころ3選</li>
+            <li>おすすめの回り方モデルコース</li>
+            <li>アクセス・チケット情報</li>
+          </ul>
+        </div>
+      </div>
+    `
+  },
+
+  '3': {
+    badge: 'ガイド', title: '新任職員向けオンボーディングガイド — 営業部',
+    html: `
+      <h1 class="doc-h1">新任職員向けオンボーディングガイド</h1>
+      <p style="text-align:center;font-size:13px;color:#666;margin-bottom:24px;">対象: 営業部（セールス事業部） 新任職員 ｜ 4週間プログラム</p>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:20px 0;">
+        <div style="background:#0f3460;color:#fff;padding:12px;border-radius:8px;text-align:center;"><div style="font-size:20px;font-weight:700;">Week 1</div><div style="font-size:10px;margin-top:4px;">基本事項</div></div>
+        <div style="background:#16213e;color:#fff;padding:12px;border-radius:8px;text-align:center;"><div style="font-size:20px;font-weight:700;">Week 2</div><div style="font-size:10px;margin-top:4px;">業務習熟（前半）</div></div>
+        <div style="background:#1a1a2e;color:#fff;padding:12px;border-radius:8px;text-align:center;"><div style="font-size:20px;font-weight:700;">Week 3</div><div style="font-size:10px;margin-top:4px;">業務習熟（後半）</div></div>
+        <div style="background:#e94560;color:#fff;padding:12px;border-radius:8px;text-align:center;"><div style="font-size:20px;font-weight:700;">Week 4</div><div style="font-size:10px;margin-top:4px;">実践・独り立ち</div></div>
+      </div>
+      <h2 class="doc-h2">Week 1: 基本事項（組織・制度・ツールの理解）</h2>
+      <h3 class="doc-h3">Day 1-2: 組織の理解</h3>
+      <ul class="checklist">
+        <li>HIT（一般社団法人広島県観光連盟）の組織図と各部門の役割を把握する</li>
+        <li>決裁フローを理解する（1契約につき最低4回の決裁サイクル）</li>
+        <li>ITツールのセットアップを完了する（M365 / HubSpot / JobCan）</li>
+      </ul>
+      <h3 class="doc-h3">Day 3-5: 業務の全体像</h3>
+      <ul class="checklist">
+        <li>営業部の4つの主要業務領域を把握する</li>
+        <li>年間スケジュール（観光シーズンカレンダー）を確認する</li>
+        <li>主要取引先リストと連絡先の引き継ぎを受ける</li>
+      </ul>
+      <h2 class="doc-h2">Week 2: 業務習熟（前半）— 観光商品企画 / 旅行会社対応</h2>
+      <ul class="checklist">
+        <li>過去の企画書・仕様書を3件以上通読する</li>
+        <li>先任者同行で旅行会社訪問を2件以上経験する</li>
+        <li>HubSpotの営業パイプライン管理を理解する</li>
+        <li>起案書の作成フローを実践する（下書き→上長レビュー）</li>
+      </ul>
+      <h2 class="doc-h2">Week 3: 業務習熟（後半）— イベント運営 / 協賛・連携</h2>
+      <ul class="checklist">
+        <li>直近のイベント運営マニュアルを通読する</li>
+        <li>協賛企業との折衝プロセスを理解する</li>
+        <li>予算管理シートの記入方法を習得する</li>
+      </ul>
+      <h2 class="doc-h2">Week 4: 実践と独り立ち</h2>
+      <ul class="checklist">
+        <li>担当案件を1件、起案から完了まで単独で実施する</li>
+        <li>上長との1on1で4週間の振り返りを行う</li>
+        <li>今後3ヶ月の個人目標を設定する</li>
+      </ul>
+      <div class="doc-note">※ HITでは年間約1/3の職員が異動するため、本ガイドは暗黙知の文書化を重視して設計しています。不明点は遠慮なく先任職員に確認してください。</div>
+    `
+  },
+
+  '4': {
+    badge: '仕様書', title: '令和8年度 観光デジタルコンテンツ制作及びSNS運用業務 仕様書',
+    html: `
+      <h1 class="doc-h1">仕 様 書</h1>
+      <p style="text-align:center;font-size:14px;color:#666;margin-bottom:32px;">令和８年度広島県観光デジタルコンテンツ制作及びSNS運用業務</p>
+      <h2 class="doc-h2">第１条 業務名</h2>
+      <p class="doc-p">令和８年度広島県観光デジタルコンテンツ制作及びSNS運用業務</p>
+      <h2 class="doc-h2">第２条 業務目的</h2>
+      <p class="doc-p">広島県は、瀬戸内海の多島美、世界遺産（原爆ドーム、厳島神社）、豊かな食文化等の観光資源を有しており、国内外からの誘客促進に向けた情報発信の強化が求められている。本業務は、デジタルコンテンツの企画・制作及びSNSの戦略的運用を通じて、広島県への来訪意欲の醸成及び観光消費額の向上を図ることを目的とする。</p>
+      <h2 class="doc-h2">第３条 業務内容</h2>
+      <table class="doc-table">
+        <tr><th>No.</th><th>業務項目</th><th>数量・頻度</th><th>仕様</th></tr>
+        <tr><td>1</td><td>動画コンテンツ制作</td><td>年間24本以上</td><td>短尺15秒〜60秒、縦型9:16</td></tr>
+        <tr><td>2</td><td>静止画素材制作</td><td>年間100枚以上</td><td>JPEG/PNG、3000px以上</td></tr>
+        <tr><td>3</td><td>記事コンテンツ制作</td><td>年間12本以上</td><td>SEO対応、2000字以上</td></tr>
+        <tr><td>4</td><td>SNS運用（IG/FB/X）</td><td>各週3回以上</td><td>コメント・DM 24時間以内対応</td></tr>
+        <tr><td>5</td><td>インフルエンサー施策</td><td>3名以上起用</td><td>フォロワー1万人以上</td></tr>
+        <tr><td>6</td><td>効果測定・報告</td><td>月次/中間/最終</td><td>KPIダッシュボード含む</td></tr>
+      </table>
+      <h2 class="doc-h2">第４条 委託期間</h2>
+      <p class="doc-p">契約締結の日から令和９年３月31日まで</p>
+      <h2 class="doc-h2">第５条 事業予算額</h2>
+      <p class="doc-p">金<span class="doc-em">8,000,000円</span>（消費税及び地方消費税を含む。）を上限とする。</p>
+      <h2 class="doc-h2">第６条 成果物</h2>
+      <table class="doc-table">
+        <tr><th>No.</th><th>成果物</th><th>納品形式</th><th>納品期限</th></tr>
+        <tr><td>1</td><td>動画コンテンツ</td><td>MP4（フルHD以上）</td><td>各制作完了後</td></tr>
+        <tr><td>2</td><td>静止画素材</td><td>JPEG/PNG（3000px以上）</td><td>各撮影完了後</td></tr>
+        <tr><td>3</td><td>月次報告書</td><td>PDF + Excel</td><td>翌月10営業日以内</td></tr>
+        <tr><td>4</td><td>最終報告書</td><td>PDF + Excel</td><td>令和9年3月31日</td></tr>
+      </table>
+      <h2 class="doc-h2">第７条 著作権</h2>
+      <p class="doc-p">本業務により作成された成果物の著作権（著作権法第27条及び第28条の権利を含む。）は、納品と同時に委託者に帰属するものとする。</p>
+      <h2 class="doc-h2">第８条 個人情報保護</h2>
+      <p class="doc-p">受託者は、本業務の履行に際し知り得た個人情報について、個人情報の保護に関する法律その他関係法令を遵守し、適切に管理しなければならない。</p>
+      <div class="doc-note">※ 本文書はAIによるドラフトです。法務確認の上ご利用ください。</div>
+    `
+  },
+
+  '5': {
+    badge: 'リサーチ', title: '観光AIコンシェルジュ導入事例 — リサーチレポート',
+    html: `
+      <h1 class="doc-h1">観光分野におけるAIコンシェルジュ導入事例と効果</h1>
+      <p style="text-align:center;font-size:12px;color:#666;margin-bottom:24px;">調査日: 2026年2月26日 ｜ 形式: 詳細レポート ｜ ソース: 26件</p>
+      <div style="background:#0f3460;color:#fff;padding:20px;border-radius:8px;margin:20px 0;">
+        <h3 style="font-size:14px;margin-bottom:8px;">エグゼクティブサマリー</h3>
+        <p style="font-size:12px;line-height:1.8;">観光分野におけるAIチャットボット・コンシェルジュの導入は、2023年以降の生成AI普及を契機に急速に進展。国内では観光庁が2025年5月に「生成AI活用の手引書」を公開し、自治体・DMOでの活用を積極的に推進。問い合わせ自動化率60〜80%、電話削減20〜40%の効果が報告されている。</p>
+      </div>
+      <h2 class="doc-h2">事例調査（主要6件）</h2>
+      <table class="doc-table">
+        <tr><th>事例</th><th>提供者</th><th>特徴</th><th>HIT参考度</th></tr>
+        <tr><td>JRTok-AI</td><td>JR東海</td><td>東海道新幹線沿線の観光情報を対話形式で提供</td><td><span class="badge-mid">中</span></td></tr>
+        <tr><td>ConcierGAI</td><td>Kotozna（JTB採用）</td><td>109言語対応、QRコードで母国語対応</td><td><span class="badge-mid">中</span></td></tr>
+        <tr><td>MATCHA AI</td><td>MATCHA</td><td>既存記事をRAGのナレッジベースとして活用</td><td><span class="badge-high">高</span></td></tr>
+        <tr><td>地域専用AIアシスタント</td><td>ナビタイムジャパン</td><td>自治体の観光情報に特化したAIアシスタント</td><td><span class="badge-mid">中</span></td></tr>
+        <tr><td>生成AI観光ガイド</td><td>観光庁実証事業</td><td>地方自治体向けの生成AI活用モデル</td><td><span class="badge-high">高</span></td></tr>
+        <tr><td>AI観光コンシェルジュ</td><td>京都市観光協会</td><td>多言語対応、混雑状況リアルタイム提供</td><td><span class="badge-mid">中</span></td></tr>
+      </table>
+      <h2 class="doc-h2">費用対効果データ</h2>
+      <div class="kpi-grid" style="grid-template-columns:repeat(3,1fr);">
+        <div class="kpi-card green"><div class="kpi-label">問い合わせ自動化率</div><div class="kpi-value">60-80%</div></div>
+        <div class="kpi-card blue"><div class="kpi-label">電話問い合わせ削減</div><div class="kpi-value">20-40%</div></div>
+        <div class="kpi-card orange"><div class="kpi-label">導入初期コスト</div><div class="kpi-value" style="font-size:16px;">数十万〜数百万</div></div>
+      </div>
+      <h2 class="doc-h2">HITへの提言</h2>
+      <table class="doc-table">
+        <tr><th>フェーズ</th><th>施策</th><th>概算コスト</th></tr>
+        <tr class="highlight-row"><td>短期（3ヶ月）</td><td>Dive! Hiroshima記事のRAG活用チャットボット</td><td>月額数万円〜</td></tr>
+        <tr><td>中期（6ヶ月）</td><td>ひろくまAIアバター・広島弁対応コンシェルジュ</td><td>開発100〜300万円</td></tr>
+        <tr><td>長期（1年）</td><td>KINSAIアプリへのAI機能統合</td><td>要見積</td></tr>
+      </table>
+      <div class="doc-note">★ MATCHA AI のモデル（既存記事をRAGのナレッジベースとして活用）がHITに最も参考になる。Dive! Hiroshimaの記事資産で同様のアプローチが可能。</div>
+    `
+  },
+
+  '6': {
+    badge: 'ダッシュボード', title: 'SNS月次レポート 2026年1月 — KPIダッシュボード',
+    html: `
+      <h1 class="doc-h1">SNS月次レポート 2026年1月</h1>
+      <p style="text-align:center;font-size:12px;color:#666;margin-bottom:8px;">対象期間: 2026年1月1日〜1月31日 ｜ 主管: メディアプロモーション部</p>
+      <h2 class="doc-h2">エグゼクティブサマリー</h2>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:12px 0;">
+        <div style="background:#e8f5e9;padding:12px;border-radius:6px;font-size:12px;">&#x2705; Instagram フォロワー49,800到達。朝焼きリールが月間最高</div>
+        <div style="background:#e8f5e9;padding:12px;border-radius:6px;font-size:12px;">&#x2705; X「#やっぱ広島じゃ」でフォロワー+380（+2.4%）</div>
+        <div style="background:#e8f5e9;padding:12px;border-radius:6px;font-size:12px;">&#x2705; TikTok ひろくま餅つき 完全視聴率68%（過去最高）</div>
+        <div style="background:#fff3e0;padding:12px;border-radius:6px;font-size:12px;">&#x26A0;&#xFE0F; Facebook リーチ-8.2% 動画比率引上げ急務</div>
+      </div>
+      <h2 class="doc-h2">KPIダッシュボード</h2>
+      <div class="kpi-grid">
+        <div class="kpi-card ig"><div class="kpi-label">Instagram</div><div class="kpi-value">49,800</div><div class="kpi-change up">+480 (+1.0%)</div></div>
+        <div class="kpi-card x"><div class="kpi-label">X (Twitter)</div><div class="kpi-value">16,200</div><div class="kpi-change up">+380 (+2.4%)</div></div>
+        <div class="kpi-card fb"><div class="kpi-label">Facebook</div><div class="kpi-value">5,330</div><div class="kpi-change up">+50 (+0.9%)</div></div>
+        <div class="kpi-card tk"><div class="kpi-label">TikTok</div><div class="kpi-value">3,200</div><div class="kpi-change up">+200 (+6.7%)</div></div>
+      </div>
+      <div class="kpi-grid">
+        <div class="kpi-card green"><div class="kpi-label">総フォロワー</div><div class="kpi-value">74,530</div><div class="kpi-change up">+1,110 (+1.5%)</div></div>
+        <div class="kpi-card blue"><div class="kpi-label">平均エンゲージメント率</div><div class="kpi-value">5.82%</div><div class="kpi-change up">+0.24pt</div></div>
+        <div class="kpi-card orange"><div class="kpi-label">総インプレッション</div><div class="kpi-value" style="font-size:22px;">1,082K</div><div class="kpi-change down">-13.1%</div></div>
+        <div class="kpi-card red"><div class="kpi-label">総エンゲージメント</div><div class="kpi-value" style="font-size:22px;">34,800</div><div class="kpi-change down">-8.9%</div></div>
+      </div>
+      <h2 class="doc-h2">トップ投稿 TOP5</h2>
+      <table class="doc-table">
+        <tr><th>#</th><th>投稿</th><th>PF</th><th>エンゲージメント</th><th>率</th></tr>
+        <tr class="highlight-row"><td>1</td><td>冬の厳島神社 朝焼きの回廊（リール）</td><td>IG</td><td class="num">4,200</td><td class="num">9.8%</td></tr>
+        <tr><td>2</td><td>ひろくま年始挨拶「よろしくじゃけぇ！」</td><td>X</td><td class="num">3,800</td><td class="num">12.4%</td></tr>
+        <tr><td>3</td><td>宮島の冬牡蠣 炭火焼きの音（ASMR）</td><td>IG</td><td class="num">3,100</td><td class="num">8.2%</td></tr>
+        <tr><td>4</td><td>#やっぱ広島じゃ 2026 キャンペーン</td><td>X</td><td class="num">2,400</td><td class="num">8.6%</td></tr>
+        <tr><td>5</td><td>ひろくま餅つきアニメーション</td><td>TikTok</td><td class="num">1,800</td><td class="num">68%視聴</td></tr>
+      </table>
+      <h2 class="doc-h2">コンテンツカテゴリ別</h2>
+      <table class="doc-table">
+        <tr><th>カテゴリ</th><th>投稿数</th><th>平均ER</th><th>前月比</th><th>評価</th></tr>
+        <tr><td>グルメ</td><td class="num">14</td><td class="num">7.4%</td><td class="num" style="color:#28a745;">+0.6pt</td><td><span class="badge-high">好調</span></td></tr>
+        <tr><td>絶景・風景</td><td class="num">12</td><td class="num">6.8%</td><td class="num" style="color:#28a745;">+0.3pt</td><td><span class="badge-high">好調</span></td></tr>
+        <tr><td>ひろくま</td><td class="num">10</td><td class="num">8.2%</td><td class="num" style="color:#28a745;">+1.2pt</td><td><span class="badge-high">最高</span></td></tr>
+        <tr><td>イベント告知</td><td class="num">8</td><td class="num">3.2%</td><td class="num" style="color:#e94560;">-0.4pt</td><td><span class="badge-mid">要改善</span></td></tr>
+        <tr><td>情報・実用</td><td class="num">10</td><td class="num">2.4%</td><td class="num" style="color:#e94560;">-0.3pt</td><td><span class="badge-mid">要改善</span></td></tr>
+      </table>
+      <h2 class="doc-h2">来月のアクション提案（5件）</h2>
+      <table class="doc-table">
+        <tr><th>#</th><th>テーマ</th><th>推奨PF</th><th>形式</th></tr>
+        <tr><td>1</td><td>「冬のミタイケン」牡蠣小屋リール</td><td>IG</td><td>30-60秒動画</td></tr>
+        <tr><td>2</td><td>ひろくまバレンタイン企画</td><td>TikTok+X</td><td>15秒動画</td></tr>
+        <tr><td>3</td><td>#やっぱ広島じゃ 冬 UGC第2弾</td><td>X+IG</td><td>キャンペーン</td></tr>
+        <tr><td>4</td><td>春節向け多言語投稿</td><td>IG+FB</td><td>カルーセル</td></tr>
+        <tr><td>5</td><td>冬の夜景スポットTOP5</td><td>IG</td><td>カルーセル10枚</td></tr>
+      </table>
+    `
+  },
+
+  '7': {
+    badge: 'データ分析', title: '月次動向レポート — 広島県 2025年10月',
+    html: `
+      <h1 class="doc-h1">月次動向レポート — 広島県観光データ分析</h1>
+      <p style="text-align:center;font-size:12px;color:#666;margin-bottom:24px;">分析対象: 2025年10月 ｜ データソース: 観光庁「宿泊旅行統計調査」、JNTO「訪日外客統計」</p>
+      <h2 class="doc-h2">主要KPI</h2>
+      <div class="kpi-grid">
+        <div class="kpi-card green"><div class="kpi-label">延べ宿泊者数</div><div class="kpi-value" style="font-size:22px;">152万</div><div class="kpi-change up">前年比+6.8%</div></div>
+        <div class="kpi-card blue"><div class="kpi-label">インバウンド</div><div class="kpi-value" style="font-size:22px;">28.5万</div><div class="kpi-change up">前年比+22.3%</div></div>
+        <div class="kpi-card orange"><div class="kpi-label">客室稼働率</div><div class="kpi-value">72.4%</div><div class="kpi-change up">全国平均68.2%超</div></div>
+        <div class="kpi-card red"><div class="kpi-label">外国人比率</div><div class="kpi-value">18.8%</div><div class="kpi-change up">過去最高水準</div></div>
+      </div>
+      <h2 class="doc-h2">地域別分析</h2>
+      <table class="doc-table">
+        <tr><th>エリア</th><th>宿泊者数</th><th>構成比</th><th>前月比</th><th>外国人比率</th><th>評価</th></tr>
+        <tr class="highlight-row"><td>広島市</td><td class="num">72.5万</td><td class="num">47.7%</td><td class="num" style="color:#28a745;">+4.8%</td><td class="num">20.0%</td><td>安定</td></tr>
+        <tr class="highlight-row"><td>宮島</td><td class="num">28.0万</td><td class="num">18.4%</td><td class="num" style="color:#28a745;">+15.2%</td><td class="num">30.4%</td><td><span class="badge-high">急成長</span></td></tr>
+        <tr><td>尾道</td><td class="num">18.5万</td><td class="num">12.2%</td><td class="num" style="color:#28a745;">+9.8%</td><td class="num">16.2%</td><td>好調</td></tr>
+        <tr><td>呉</td><td class="num">10.0万</td><td class="num">6.6%</td><td class="num">+3.2%</td><td class="num">8.0%</td><td><span class="badge-mid">要強化</span></td></tr>
+        <tr><td>その他</td><td class="num">23.0万</td><td class="num">15.1%</td><td class="num">+5.5%</td><td class="num">7.4%</td><td>—</td></tr>
+      </table>
+      <h2 class="doc-h2">国籍別分析</h2>
+      <table class="doc-table">
+        <tr><th>国籍</th><th>宿泊者数</th><th>構成比</th><th>前年比</th><th>主な訪問先</th></tr>
+        <tr><td>韓国</td><td class="num">5.8万</td><td class="num">20.4%</td><td class="num" style="color:#28a745;">+18.5%</td><td>広島市、宮島</td></tr>
+        <tr><td>台湾</td><td class="num">5.2万</td><td class="num">18.2%</td><td class="num" style="color:#28a745;">+26.3%</td><td>宮島、尾道</td></tr>
+        <tr><td>米国</td><td class="num">4.0万</td><td class="num">14.0%</td><td class="num" style="color:#28a745;">+24.1%</td><td>広島市、宮島</td></tr>
+        <tr class="highlight-row"><td>中国</td><td class="num">3.5万</td><td class="num">12.3%</td><td class="num" style="color:#28a745;">+35.2%</td><td>広島市、宮島</td></tr>
+        <tr><td>豪州</td><td class="num">1.8万</td><td class="num">6.3%</td><td class="num" style="color:#28a745;">+28.4%</td><td>広島市、しまなみ</td></tr>
+      </table>
+      <h2 class="doc-h2">競合ベンチマーク（中国・四国5県）</h2>
+      <table class="doc-table">
+        <tr><th>県</th><th>宿泊者数</th><th>前年比</th><th>外国人比率</th><th>順位</th></tr>
+        <tr class="highlight-row"><td>広島県</td><td class="num">152.0万</td><td class="num">+6.8%</td><td class="num">18.8%</td><td><span class="badge-high">1位</span></td></tr>
+        <tr><td>岡山県</td><td class="num">98.0万</td><td class="num">+4.5%</td><td class="num">10.7%</td><td>2位</td></tr>
+        <tr><td>愛媛県</td><td class="num">68.0万</td><td class="num">+5.2%</td><td class="num">9.1%</td><td>3位</td></tr>
+        <tr><td>山口県</td><td class="num">62.0万</td><td class="num">+3.8%</td><td class="num">7.7%</td><td>4位</td></tr>
+        <tr><td>島根県</td><td class="num">52.0万</td><td class="num" style="color:#28a745;">+8.1%</td><td class="num">7.3%</td><td>伸び率1位</td></tr>
+      </table>
+      <h2 class="doc-h2">提言</h2>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:12px 0;">
+        <div style="background:#e8f5e9;border-left:4px solid #28a745;padding:12px;border-radius:0 6px 6px 0;font-size:12px;"><strong>短期:</strong> 宮島紅葉ピーク対策の強化、インバウンド多言語化</div>
+        <div style="background:#e8f5e9;border-left:4px solid #28a745;padding:12px;border-radius:0 6px 6px 0;font-size:12px;"><strong>短期:</strong> 中国市場回復への受入態勢整備</div>
+        <div style="background:#e3f2fd;border-left:4px solid #0f3460;padding:12px;border-radius:0 6px 6px 0;font-size:12px;"><strong>中長期:</strong> 呉エリア誘客戦略の再構築</div>
+        <div style="background:#e3f2fd;border-left:4px solid #0f3460;padding:12px;border-radius:0 6px 6px 0;font-size:12px;"><strong>中長期:</strong> 広域周遊ルート開発（広島+出雲+しまなみ）</div>
+      </div>
+    `
+  },
+
+  '8': {
+    badge: '会議資料', title: '情報発信事業PJ 定例会議 — 会議処理結果',
+    html: `
+      <h1 class="doc-h1">令和8年度 情報発信事業プロジェクト 定例会議</h1>
+      <p style="text-align:center;font-size:12px;color:#666;">日時: 令和8年2月20日（木）10:00〜11:30 ｜ 場所: HIT会議室A</p>
+      <div class="tab-bar">
+        <button class="tab-btn active" onclick="switchTab(this,'t8-action')">アクションアイテム</button>
+        <button class="tab-btn" onclick="switchTab(this,'t8-agenda')">次回アジェンダ</button>
+        <button class="tab-btn" onclick="switchTab(this,'t8-minutes')">議事録</button>
+      </div>
+      <div class="tab-content active" id="t8-action">
+        <h2 class="doc-h2">アクションアイテム一覧</h2>
+        <table class="doc-table">
+          <tr><th>No.</th><th>アクション</th><th>担当</th><th>期限</th><th>優先度</th><th>状態</th></tr>
+          <tr><td>1</td><td>リール比率の変更案を作成する</td><td>担当者A（メディアP部）</td><td>02/27</td><td><span class="badge-high">高</span></td><td><span class="badge-status">未着手</span></td></tr>
+          <tr><td>2</td><td>インフルエンサーA氏との契約条件確認・報告</td><td>担当者B（営業部）</td><td>03/06</td><td><span class="badge-high">高</span></td><td><span class="badge-status">未着手</span></td></tr>
+          <tr><td>3</td><td>効果測定の中間報告書を作成する</td><td>担当者A</td><td>03/15</td><td><span class="badge-mid">中</span></td><td><span class="badge-status">未着手</span></td></tr>
+          <tr><td>4</td><td>GA4データ連携を情シスに確認し結果共有</td><td>担当者C（企画総務部）</td><td>02/27</td><td><span class="badge-mid">中</span></td><td><span class="badge-status">未着手</span></td></tr>
+          <tr><td>5</td><td>次回会議の日程調整（3月第2週）</td><td>担当者C</td><td>03/06</td><td><span class="badge-mid">中</span></td><td><span class="badge-status">未着手</span></td></tr>
+        </table>
+      </div>
+      <div class="tab-content" id="t8-agenda">
+        <h2 class="doc-h2">次回アジェンダ（案）</h2>
+        <p class="doc-p" style="font-size:12px;color:#666;">日時: 3月第2週 [確定日時連絡待ち] ｜ 参加者: 担当者A・B・C</p>
+        <table class="doc-table">
+          <tr><th>No.</th><th>議題</th><th>担当</th><th>時間</th></tr>
+          <tr><td>1</td><td>前回アクションアイテム進捗確認</td><td>全員</td><td>10分</td></tr>
+          <tr><td>2</td><td>SNSコンテンツ制作（リール比率変更案）</td><td>担当者A</td><td>15分</td></tr>
+          <tr><td>3</td><td>インフルエンサー施策（契約条件報告）</td><td>担当者B</td><td>15分</td></tr>
+          <tr><td>4</td><td>効果測定（GA4連携・IG施策）</td><td>担当者A・C</td><td>15分</td></tr>
+          <tr><td>5</td><td>中間報告書の方向性確認</td><td>担当者A</td><td>10分</td></tr>
+          <tr><td>6</td><td>その他・次回日程調整</td><td>全員</td><td>5分</td></tr>
+        </table>
+      </div>
+      <div class="tab-content" id="t8-minutes">
+        <h2 class="doc-h2">議事録</h2>
+        <h3 class="doc-h3">1. SNSコンテンツ制作の進捗</h3>
+        <p class="doc-p">動画コンテンツは全24本中12本が完了、残り12本は来月中に完成予定。リール形式の投稿が通常投稿と比較してリーチ約2倍。リール比率を増やす方向で検討を進める。</p>
+        <h3 class="doc-h3">2. インフルエンサー施策</h3>
+        <p class="doc-p">フォロワーX万人のインフルエンサーA氏と交渉中。契約条件（報酬・投稿回数・二次利用権）を確認中。予算Y万円枠内で調整する方針。</p>
+        <h3 class="doc-h3">3. 効果測定の中間報告</h3>
+        <p class="doc-p">KPI達成状況は概ね順調。Instagramフォロワー数が目標の80%に到達。残り20%の達成に向けた施策検討が必要。GA4データ連携について情シスへの確認が必要。</p>
+      </div>
+    `
+  },
+
+  '9': {
+    badge: 'マニュアル', title: '電話応対マニュアル — 全職員向け',
+    html: `
+      <h1 class="doc-h1">電話応対マニュアル</h1>
+      <p style="text-align:center;font-size:12px;color:#666;margin-bottom:24px;">対象: 全職員（主管: 企画総務部）｜ 広島県観光連盟（HIT）</p>
+      <h2 class="doc-h2">1. 電話応対の基本フロー</h2>
+      <div class="flow-chart">
+        <div class="flow-box">受電（3コール以内）</div>
+        <div class="flow-arrow">▼</div>
+        <div class="flow-box" style="background:#16213e;">Step 1: 初動（名乗り・挨拶）</div>
+        <div class="flow-arrow">▼</div>
+        <div class="flow-box" style="background:#16213e;">Step 2: 用件確認（所属・氏名・要件）</div>
+        <div class="flow-arrow">▼</div>
+        <div class="flow-box" style="background:#16213e;">Step 3: 対応判断</div>
+        <div class="flow-arrow">▼</div>
+        <div class="flow-branch">
+          <div class="flow-option"><strong>自分で回答</strong><br>→ 回答</div>
+          <div class="flow-option"><strong>他部署</strong><br>→ 取次</div>
+          <div class="flow-option"><strong>担当者不在</strong><br>→ 折返し案内</div>
+        </div>
+        <div class="flow-arrow">▼</div>
+        <div class="flow-box">Step 4: クロージング（復唱・挨拶）</div>
+      </div>
+      <h2 class="doc-h2">2. よくある問い合わせ FAQ</h2>
+      <table class="doc-table">
+        <tr><th>分類</th><th>質問</th><th>回答ポイント</th></tr>
+        <tr><td>アクセス</td><td>宮島へのアクセス</td><td>JR山陽本線「宮島口」→ フェリー約10分</td></tr>
+        <tr><td>アクセス</td><td>原爆ドームへの行き方</td><td>路面電車「原爆ドーム前」下車すぐ</td></tr>
+        <tr><td>アクセス</td><td>しまなみ海道サイクリング</td><td>尾道〜今治 約60km、レンタサイクル各所あり</td></tr>
+        <tr><td>イベント</td><td>花火大会の日程</td><td>季節イベントカレンダー参照→ 担当部署取次</td></tr>
+        <tr><td>取材</td><td>プレス取材依頼</td><td>メディアプロモーション部へ取次</td></tr>
+        <tr><td>混同</td><td>広島県/広島市との混同</td><td>別組織であることを丁寧に案内</td></tr>
+      </table>
+      <h2 class="doc-h2">3. 敬語例文集</h2>
+      <table class="doc-table">
+        <tr><th style="background:#e94560;">避けるべき表現</th><th style="background:#28a745;">正しい表現</th></tr>
+        <tr><td>「わかりません」</td><td>「確認いたしまして、折り返しご連絡いたします」</td></tr>
+        <tr><td>「もしもし」</td><td>使用しない（名乗りから始める）</td></tr>
+        <tr><td>「了解しました」</td><td>「かしこまりました」</td></tr>
+        <tr><td>「ちょっと待ってください」</td><td>「少々お待ちいただけますでしょうか」</td></tr>
+        <tr><td>「いません」</td><td>「あいにく席を外しております」</td></tr>
+      </table>
+      <h2 class="doc-h2">4. 季節別の頻出問い合わせ</h2>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0;">
+        <div style="background:#fce4ec;padding:12px;border-radius:6px;font-size:11px;"><strong>春</strong><br>桜の開花状況<br>GWイベント<br>花見スポット</div>
+        <div style="background:#e3f2fd;padding:12px;border-radius:6px;font-size:11px;"><strong>夏</strong><br>海水浴場案内<br>花火大会日程<br>平和記念式典</div>
+        <div style="background:#fff3e0;padding:12px;border-radius:6px;font-size:11px;"><strong>秋</strong><br>紅葉の見頃<br>牡蠣シーズン<br>秋祭り情報</div>
+        <div style="background:#e8eaf6;padding:12px;border-radius:6px;font-size:11px;"><strong>冬</strong><br>牡蠣祭り<br>温泉地案内<br>イルミネーション</div>
+      </div>
+      <h2 class="doc-h2">5. 部署案内一覧（取次先早見表）</h2>
+      <table class="doc-table">
+        <tr><th>問い合わせ内容</th><th>取次先</th><th>内線</th></tr>
+        <tr><td>観光情報全般・取材対応</td><td>メディアプロモーション部</td><td>[内線番号]</td></tr>
+        <tr><td>旅行商品・イベント・協賛</td><td>営業部（セールス事業部）</td><td>[内線番号]</td></tr>
+        <tr><td>経理・契約・総務</td><td>企画総務部</td><td>[内線番号]</td></tr>
+        <tr><td>商品企画・ツアー造成</td><td>商品造成部</td><td>[内線番号]</td></tr>
+      </table>
+    `
+  },
+
+  '10': {
+    badge: '出張書類', title: '東京出張関連書類セット（2026年3月20日〜21日）',
+    html: `
+      <h1 class="doc-h1">出張関連書類セット</h1>
+      <p style="text-align:center;font-size:12px;color:#666;">東京出張: 2026年3月20日（木）〜 3月21日（金）｜ 目的: 観光庁との意見交換会出席</p>
+      <div class="tab-bar">
+        <button class="tab-btn active" onclick="switchTab(this,'t10-compare')">航空券比較表</button>
+        <button class="tab-btn" onclick="switchTab(this,'t10-apply')">出張申請書</button>
+        <button class="tab-btn" onclick="switchTab(this,'t10-expense')">精算書テンプレート</button>
+      </div>
+      <div class="tab-content active" id="t10-compare">
+        <h2 class="doc-h2">航空券比較表（広島〜羽田 3社比較）</h2>
+        <div class="doc-note">規程に基づき、航空券は2社以上から3見積以上を取得する必要があります。</div>
+        <h3 class="doc-h3">往路: 広島 → 羽田（3月20日・朝便）</h3>
+        <table class="doc-table">
+          <tr><th>No.</th><th>航空会社</th><th>便名</th><th>出発</th><th>到着</th><th>参考価格</th></tr>
+          <tr><td>1</td><td>ANA</td><td>NH 674</td><td>07:25</td><td>08:50</td><td class="num">27,500円</td></tr>
+          <tr><td>2</td><td>JAL</td><td>JL 262</td><td>07:35</td><td>09:00</td><td class="num">28,000円</td></tr>
+          <tr class="recommend"><td>3</td><td>スカイマーク</td><td>BC 082</td><td>07:45</td><td>09:20</td><td class="num">15,800円</td></tr>
+        </table>
+        <h3 class="doc-h3">往復合計比較</h3>
+        <table class="doc-table">
+          <tr><th>航空会社</th><th>往復合計</th><th>差額（最安比）</th></tr>
+          <tr><td>ANA</td><td class="num">54,500円</td><td class="num">+23,500円</td></tr>
+          <tr><td>JAL</td><td class="num">55,500円</td><td class="num">+24,500円</td></tr>
+          <tr class="recommend"><td>スカイマーク</td><td class="num">31,000円</td><td class="num" style="color:#28a745;font-weight:700;">--- 最安 ---</td></tr>
+        </table>
+        <div style="background:#e8f5e9;padding:12px;border-radius:6px;margin:12px 0;font-size:12px;">
+          <strong>推奨:</strong> スカイマーク利用で往復 <strong>31,000円</strong>（ANA比 約23,500円の節約）
+        </div>
+      </div>
+      <div class="tab-content" id="t10-apply">
+        <h2 class="doc-h2">出張申請書ドラフト</h2>
+        <div class="stamp-row">
+          <div class="stamp-box"><div class="stamp-label">申請者</div><div class="stamp-space">印</div><div class="stamp-date">/ /</div></div>
+          <div class="stamp-box"><div class="stamp-label">所属長</div><div class="stamp-space">印</div><div class="stamp-date">/ /</div></div>
+          <div class="stamp-box"><div class="stamp-label">決裁者</div><div class="stamp-space">印</div><div class="stamp-date">/ /</div></div>
+        </div>
+        <dl class="header-info">
+          <dt>出張先</dt><dd>東京都千代田区（観光庁）</dd>
+          <dt>期間</dt><dd>2026年3月20日（木）〜 3月21日（金）（1泊2日）</dd>
+          <dt>目的</dt><dd>観光庁との意見交換会出席</dd>
+        </dl>
+        <h3 class="doc-h3">経費概算</h3>
+        <table class="doc-table">
+          <tr><th>費目</th><th>内訳</th><th>金額</th></tr>
+          <tr><td>航空券</td><td>スカイマーク往復</td><td class="num">31,000円</td></tr>
+          <tr><td>空港アクセス</td><td>リムジンバス往復</td><td class="num">2,700円</td></tr>
+          <tr><td>都内移動</td><td>モノレール・地下鉄</td><td class="num">2,000円</td></tr>
+          <tr><td>宿泊費</td><td>ビジネスホテル1泊（規程上限内）</td><td class="num">8,700円</td></tr>
+          <tr><td>日当</td><td>2日分（2,200円×2日）</td><td class="num">4,400円</td></tr>
+          <tr style="background:#f0f4ff;font-weight:700;"><td colspan="2">合計</td><td class="num">48,800円</td></tr>
+        </table>
+      </div>
+      <div class="tab-content" id="t10-expense">
+        <h2 class="doc-h2">出張旅費精算書テンプレート</h2>
+        <table class="doc-table">
+          <tr><th>No.</th><th>日付</th><th>費目</th><th>内容</th><th>金額</th><th>領収書</th></tr>
+          <tr><td>1</td><td>3/20</td><td>交通費</td><td>リムジンバス（広島BC→広島空港）</td><td class="num">　　　円</td><td>☐有 ☐無</td></tr>
+          <tr><td>2</td><td>3/20</td><td>交通費</td><td>航空券（広島→羽田）</td><td class="num">　　　円</td><td>☐有 ☐無</td></tr>
+          <tr><td>3</td><td>3/20</td><td>交通費</td><td>モノレール/地下鉄（羽田→観光庁）</td><td class="num">　　　円</td><td>☐有 ☐無</td></tr>
+          <tr><td>4</td><td>3/20</td><td>宿泊費</td><td>[ホテル名]（1泊）</td><td class="num">　　　円</td><td>☐有 ☐無</td></tr>
+          <tr><td>5</td><td>3/21</td><td>交通費</td><td>地下鉄/モノレール（ホテル→羽田）</td><td class="num">　　　円</td><td>☐有 ☐無</td></tr>
+          <tr><td>6</td><td>3/21</td><td>交通費</td><td>航空券（羽田→広島）</td><td class="num">　　　円</td><td>☐有 ☐無</td></tr>
+          <tr><td>7</td><td>3/21</td><td>交通費</td><td>リムジンバス（広島空港→広島BC）</td><td class="num">　　　円</td><td>☐有 ☐無</td></tr>
+        </table>
+        <h3 class="doc-h3">添付書類チェックリスト</h3>
+        <ul class="checklist">
+          <li>航空券の領収書（往路）</li>
+          <li>航空券の領収書（復路）</li>
+          <li>宿泊費の領収書</li>
+          <li>リムジンバスの領収書（往復）</li>
+          <li>交通費の領収書（ICカード利用明細等）</li>
+          <li>会議出席を証明する資料（出席簿の写し等）</li>
+        </ul>
+      </div>
+    `
+  }
+};
+
+// Render
+const doc = DOCS[caseId];
+if (doc) {
+  document.getElementById('docBadge').textContent = doc.badge;
+  document.getElementById('docTitle').textContent = doc.title;
+  document.getElementById('docMeta').textContent = 'CASE ' + caseId.padStart(2,'0') + ' — AI自動生成';
+  document.getElementById('paperContent').innerHTML = doc.html;
+}
+
+// Tab switching
+function switchTab(btn, tabId) {
+  const parent = btn.closest('.paper') || document.getElementById('paperContent');
+  // Find the tab-bar this button belongs to
+  const tabBar = btn.parentElement;
+  tabBar.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  // Find sibling tab-contents
+  let sibling = tabBar.nextElementSibling;
+  const contents = [];
+  while (sibling && !sibling.classList.contains('tab-bar') && !sibling.classList.contains('doc-h2')) {
+    if (sibling.classList.contains('tab-content')) contents.push(sibling);
+    sibling = sibling.nextElementSibling;
+  }
+  contents.forEach(c => c.classList.remove('active'));
+  const target = document.getElementById(tabId);
+  if (target) target.classList.add('active');
+}
+
+// Close viewer (for iframe usage)
+function closeViewer() {
+  if (window.parent && window.parent !== window) {
+    window.parent.postMessage({type:'closeDocViewer'}, '*');
+  } else {
+    window.history.back();
+  }
+}
+</script>
+</body>
+</html>
