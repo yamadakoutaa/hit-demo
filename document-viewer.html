@@ -205,13 +205,13 @@ const DOCS = {
         </p>
         <h2 class="doc-h2">添付書類</h2>
         <ol style="font-size:12px;padding-left:20px;line-height:2;">
-          <li>公募型プロポーザル実施結果報告書</li>
-          <li>提案書審査評価基準及び審査結果一覧表</li>
-          <li>最優秀提案者決定通知書（写）</li>
-          <li>仕様書</li>
-          <li>契約書（案）</li>
-          <li>A社 提案書（写）</li>
-          <li>A社 見積書</li>
+          <li><a href="#" onclick="switchToAttachment('t1-att1');return false;" style="color:#0f3460;text-decoration:underline;cursor:pointer;">公募型プロポーザル実施結果報告書</a></li>
+          <li><a href="#" onclick="switchToAttachment('t1-att2');return false;" style="color:#0f3460;text-decoration:underline;cursor:pointer;">提案書審査評価基準及び審査結果一覧表</a></li>
+          <li><a href="#" onclick="switchToAttachment('t1-att3');return false;" style="color:#0f3460;text-decoration:underline;cursor:pointer;">最優秀提案者決定通知書（写）</a></li>
+          <li><a href="#" onclick="switchToAttachment('t1-att4');return false;" style="color:#0f3460;text-decoration:underline;cursor:pointer;">仕様書</a></li>
+          <li><a href="#" onclick="switchToAttachment('t1-att5');return false;" style="color:#0f3460;text-decoration:underline;cursor:pointer;">契約書（案）</a></li>
+          <li><a href="#" onclick="switchToAttachment('t1-att6');return false;" style="color:#0f3460;text-decoration:underline;cursor:pointer;">A社 提案書（写）</a></li>
+          <li><a href="#" onclick="switchToAttachment('t1-att7');return false;" style="color:#0f3460;text-decoration:underline;cursor:pointer;">A社 見積書</a></li>
         </ol>
         <div class="doc-note">※ 本文書はAIによるドラフトです。[要記入] のプレースホルダーを実データに置換し、内容の正確性を確認した上でご利用ください。（R-4 準拠）</div>
         <p style="text-align:right;font-size:12px;margin-top:32px;color:#666;">一般社団法人広島県観光連盟</p>
@@ -1004,6 +1004,20 @@ function switchTab(btn, tabId) {
   contents.forEach(c => c.classList.remove('active'));
   const target = document.getElementById(tabId);
   if (target) target.classList.add('active');
+}
+
+// Switch to attachment tab from link inside document body
+function switchToAttachment(tabId) {
+  const tabBar = document.querySelector('.tab-bar');
+  if (!tabBar) return;
+  const targetBtn = Array.from(tabBar.querySelectorAll('.tab-btn')).find(b => {
+    const onclick = b.getAttribute('onclick');
+    return onclick && onclick.includes(tabId);
+  });
+  if (targetBtn) {
+    switchTab(targetBtn, tabId);
+    window.scrollTo({top: 0, behavior: 'smooth'});
+  }
 }
 
 // Close viewer (for iframe usage)
