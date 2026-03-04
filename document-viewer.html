@@ -85,8 +85,8 @@ body{background:#f0f2f5;font-family:'Noto Sans JP',sans-serif;color:#1a1a2e;min-
 .flow-branch .flow-option{background:#f0f4ff;border:2px solid #0f3460;padding:8px 16px;border-radius:6px;font-size:11px;text-align:center;flex:1;}
 
 /* Tabs */
-.tab-bar{display:flex;border-bottom:2px solid #e8e8e8;margin:20px 0 0;}
-.tab-btn{padding:8px 20px;background:transparent;border:none;font-size:13px;font-family:'Noto Sans JP',sans-serif;color:#666;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .2s;}
+.tab-bar{display:flex;flex-wrap:wrap;border-bottom:2px solid #e8e8e8;margin:20px 0 0;}
+.tab-btn{padding:8px 14px;background:transparent;border:none;font-size:12px;font-family:'Noto Sans JP',sans-serif;color:#666;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .2s;}
 .tab-btn:hover{color:#1a1a2e;}
 .tab-btn.active{color:#e94560;border-bottom-color:#e94560;font-weight:700;}
 .tab-content{display:none;padding:20px 0;}
@@ -135,73 +135,346 @@ const DOCS = {
   '1': {
     badge: '起案書', title: '契約締結伺い — 観光デジタルコンテンツ制作等業務',
     html: `
-      <div class="stamp-row">
-        <div class="stamp-box"><div class="stamp-label">起案</div><div class="stamp-space">印</div><div class="stamp-date">R8.4.22</div></div>
-        <div class="stamp-box"><div class="stamp-label">審査</div><div class="stamp-space">印</div><div class="stamp-date">/ /</div></div>
-        <div class="stamp-box"><div class="stamp-label">合議</div><div class="stamp-space">印</div><div class="stamp-date">/ /</div></div>
-        <div class="stamp-box"><div class="stamp-label">決裁</div><div class="stamp-space">印</div><div class="stamp-date">/ /</div></div>
+      <div class="tab-bar">
+        <button class="tab-btn active" onclick="switchTab(this,'t1-kian')">起案書</button>
+        <button class="tab-btn" onclick="switchTab(this,'t1-att1')">添付1 実施結果報告</button>
+        <button class="tab-btn" onclick="switchTab(this,'t1-att2')">添付2 審査結果</button>
+        <button class="tab-btn" onclick="switchTab(this,'t1-att3')">添付3 決定通知</button>
+        <button class="tab-btn" onclick="switchTab(this,'t1-att4')">添付4 仕様書</button>
+        <button class="tab-btn" onclick="switchTab(this,'t1-att5')">添付5 契約書案</button>
+        <button class="tab-btn" onclick="switchTab(this,'t1-att6')">添付6 提案書</button>
+        <button class="tab-btn" onclick="switchTab(this,'t1-att7')">添付7 見積書</button>
       </div>
-      <h1 class="doc-h1">起 案 書</h1>
-      <dl class="header-info">
-        <dt>文書番号</dt><dd>[要記入: 文書番号]</dd>
-        <dt>起案日</dt><dd>令和８年４月22日</dd>
-        <dt>決裁区分</dt><dd>会長決裁</dd>
-        <dt>起案部署</dt><dd>企画総務部</dd>
-        <dt>起案者</dt><dd>[要記入: 起案者氏名]</dd>
-      </dl>
-      <h2 class="doc-h2">件名</h2>
-      <p class="doc-p">令和８年度広島県観光デジタルコンテンツ制作及びSNS運用業務委託契約の締結について</p>
-      <h2 class="doc-h2">要旨（起案理由）</h2>
-      <p class="doc-p">令和８年度広島県観光デジタルコンテンツ制作及びSNS運用業務について、公募型プロポーザル方式により受託候補者を選定した結果、下記のとおり最優秀提案者が決定したので、当該事業者と業務委託契約を締結したく伺うものである。</p>
-      <h2 class="doc-h2">内容</h2>
-      <h3 class="doc-h3">１ 契約の目的</h3>
-      <p class="doc-p">広島県の観光資源（瀬戸内海の多島美、世界遺産、豊かな食文化等）を題材としたデジタルコンテンツの企画・制作、SNSアカウントの運用・管理、インフルエンサーを活用した情報拡散及び効果測定を行うもの。</p>
-      <h3 class="doc-h3">２ 契約方式及び選定経過</h3>
-      <p class="doc-p">公募型プロポーザル方式による最優秀提案者との随意契約</p>
-      <table class="doc-table">
-        <tr><th>項目</th><th>内容</th></tr>
-        <tr><td>公告日</td><td>令和８年４月１日</td></tr>
-        <tr><td>参加資格確認申請</td><td>令和８年４月８日締切</td></tr>
-        <tr><td>提案書提出</td><td>令和８年４月14日締切</td></tr>
-        <tr><td>提案書提出者数</td><td>[要記入: 応募者数]社</td></tr>
-        <tr><td>審査会開催日</td><td>[要記入: 審査会日付]</td></tr>
-      </table>
-      <h3 class="doc-h3">３ 契約の相手方</h3>
-      <table class="doc-table">
-        <tr><th>項目</th><th>内容</th></tr>
-        <tr><td>名称</td><td>[要記入: 契約相手方の正式名称]</td></tr>
-        <tr><td>所在地</td><td>[要記入: 所在地]</td></tr>
-        <tr><td>代表者</td><td>[要記入: 代表者名]</td></tr>
-      </table>
-      <h3 class="doc-h3">４ 契約金額</h3>
-      <table class="doc-table">
-        <tr><th>項目</th><th>金額</th></tr>
-        <tr><td>契約金額（税込）</td><td class="num">[要記入: 契約金額]円</td></tr>
-        <tr><td>契約金額（税抜）</td><td class="num">[要記入: 契約金額（税抜）]円</td></tr>
-      </table>
-      <div class="doc-note">※ 事業予算額 金8,000,000円（税込）の範囲内であることを確認済みである。</div>
-      <h3 class="doc-h3">５ 契約期間</h3>
-      <p class="doc-p">契約締結の日から令和９年３月31日まで</p>
-      <h3 class="doc-h3">６ 業務内容</h3>
-      <p class="doc-p">仕様書のとおり。主な業務項目は以下のとおりである。</p>
-      <p class="doc-p" style="padding-left:16px;">
-      （１）デジタルコンテンツの企画・制作（動画24本以上・静止画100枚以上・記事12本以上）<br>
-      （２）SNSアカウントの運用・管理（Instagram・Facebook・X 各週3回以上）<br>
-      （３）インフルエンサー等を活用した情報拡散（フォロワー1万人以上3名以上）<br>
-      （４）効果測定及び報告（月次・中間・最終）
-      </p>
-      <h2 class="doc-h2">添付書類</h2>
-      <ol style="font-size:12px;padding-left:20px;line-height:2;">
-        <li>公募型プロポーザル実施結果報告書</li>
-        <li>提案書審査評価基準及び審査結果一覧表</li>
-        <li>最優秀提案者決定通知書（写）</li>
-        <li>仕様書</li>
-        <li>契約書（案）</li>
-        <li>A社 提案書（写）</li>
-        <li>A社 見積書</li>
-      </ol>
-      <div class="doc-note">※ 本文書はAIによるドラフトです。[要記入] のプレースホルダーを実データに置換し、内容の正確性を確認した上でご利用ください。（R-4 準拠）</div>
-      <p style="text-align:right;font-size:12px;margin-top:32px;color:#666;">一般社団法人広島県観光連盟</p>
+
+      <!-- ===== 起案書本文 ===== -->
+      <div class="tab-content active" id="t1-kian">
+        <div class="stamp-row">
+          <div class="stamp-box"><div class="stamp-label">起案</div><div class="stamp-space">印</div><div class="stamp-date">R8.4.22</div></div>
+          <div class="stamp-box"><div class="stamp-label">審査</div><div class="stamp-space">印</div><div class="stamp-date">/ /</div></div>
+          <div class="stamp-box"><div class="stamp-label">合議</div><div class="stamp-space">印</div><div class="stamp-date">/ /</div></div>
+          <div class="stamp-box"><div class="stamp-label">決裁</div><div class="stamp-space">印</div><div class="stamp-date">/ /</div></div>
+        </div>
+        <h1 class="doc-h1">起 案 書</h1>
+        <dl class="header-info">
+          <dt>文書番号</dt><dd>[要記入: 文書番号]</dd>
+          <dt>起案日</dt><dd>令和８年４月22日</dd>
+          <dt>決裁区分</dt><dd>会長決裁</dd>
+          <dt>起案部署</dt><dd>企画総務部</dd>
+          <dt>起案者</dt><dd>[要記入: 起案者氏名]</dd>
+        </dl>
+        <h2 class="doc-h2">件名</h2>
+        <p class="doc-p">令和８年度広島県観光デジタルコンテンツ制作及びSNS運用業務委託契約の締結について</p>
+        <h2 class="doc-h2">要旨（起案理由）</h2>
+        <p class="doc-p">令和８年度広島県観光デジタルコンテンツ制作及びSNS運用業務について、公募型プロポーザル方式により受託候補者を選定した結果、下記のとおり最優秀提案者が決定したので、当該事業者と業務委託契約を締結したく伺うものである。</p>
+        <h2 class="doc-h2">内容</h2>
+        <h3 class="doc-h3">１ 契約の目的</h3>
+        <p class="doc-p">広島県の観光資源（瀬戸内海の多島美、世界遺産、豊かな食文化等）を題材としたデジタルコンテンツの企画・制作、SNSアカウントの運用・管理、インフルエンサーを活用した情報拡散及び効果測定を行うもの。</p>
+        <h3 class="doc-h3">２ 契約方式及び選定経過</h3>
+        <p class="doc-p">公募型プロポーザル方式による最優秀提案者との随意契約</p>
+        <table class="doc-table">
+          <tr><th>項目</th><th>内容</th></tr>
+          <tr><td>公告日</td><td>令和８年４月１日</td></tr>
+          <tr><td>参加資格確認申請</td><td>令和８年４月８日締切</td></tr>
+          <tr><td>提案書提出</td><td>令和８年４月14日締切</td></tr>
+          <tr><td>提案書提出者数</td><td>3社</td></tr>
+          <tr><td>審査会開催日</td><td>令和８年４月18日</td></tr>
+        </table>
+        <h3 class="doc-h3">３ 契約の相手方</h3>
+        <table class="doc-table">
+          <tr><th>項目</th><th>内容</th></tr>
+          <tr><td>名称</td><td>[要記入: 契約相手方の正式名称]</td></tr>
+          <tr><td>所在地</td><td>[要記入: 所在地]</td></tr>
+          <tr><td>代表者</td><td>[要記入: 代表者名]</td></tr>
+        </table>
+        <h3 class="doc-h3">４ 契約金額</h3>
+        <table class="doc-table">
+          <tr><th>項目</th><th>金額</th></tr>
+          <tr><td>契約金額（税込）</td><td class="num">[要記入: 契約金額]円</td></tr>
+          <tr><td>契約金額（税抜）</td><td class="num">[要記入: 契約金額（税抜）]円</td></tr>
+        </table>
+        <div class="doc-note">※ 事業予算額 金8,000,000円（税込）の範囲内であることを確認済みである。</div>
+        <h3 class="doc-h3">５ 契約期間</h3>
+        <p class="doc-p">契約締結の日から令和９年３月31日まで</p>
+        <h3 class="doc-h3">６ 業務内容</h3>
+        <p class="doc-p">仕様書のとおり。主な業務項目は以下のとおりである。</p>
+        <p class="doc-p" style="padding-left:16px;">
+        （１）デジタルコンテンツの企画・制作（動画24本以上・静止画100枚以上・記事12本以上）<br>
+        （２）SNSアカウントの運用・管理（Instagram・Facebook・X 各週3回以上）<br>
+        （３）インフルエンサー等を活用した情報拡散（フォロワー1万人以上3名以上）<br>
+        （４）効果測定及び報告（月次・中間・最終）
+        </p>
+        <h2 class="doc-h2">添付書類</h2>
+        <ol style="font-size:12px;padding-left:20px;line-height:2;">
+          <li>公募型プロポーザル実施結果報告書</li>
+          <li>提案書審査評価基準及び審査結果一覧表</li>
+          <li>最優秀提案者決定通知書（写）</li>
+          <li>仕様書</li>
+          <li>契約書（案）</li>
+          <li>A社 提案書（写）</li>
+          <li>A社 見積書</li>
+        </ol>
+        <div class="doc-note">※ 本文書はAIによるドラフトです。[要記入] のプレースホルダーを実データに置換し、内容の正確性を確認した上でご利用ください。（R-4 準拠）</div>
+        <p style="text-align:right;font-size:12px;margin-top:32px;color:#666;">一般社団法人広島県観光連盟</p>
+      </div>
+
+      <!-- ===== 添付1: 公募型プロポーザル実施結果報告書 ===== -->
+      <div class="tab-content" id="t1-att1">
+        <h1 class="doc-h1">公募型プロポーザル実施結果報告書</h1>
+        <dl class="header-info">
+          <dt>報告日</dt><dd>令和８年４月20日</dd>
+          <dt>報告者</dt><dd>企画総務部 [要記入: 担当者氏名]</dd>
+          <dt>案件名</dt><dd>令和８年度広島県観光デジタルコンテンツ制作及びSNS運用業務</dd>
+        </dl>
+        <h2 class="doc-h2">１ 実施概要</h2>
+        <table class="doc-table">
+          <tr><th>項目</th><th>内容</th></tr>
+          <tr><td>契約方式</td><td>公募型プロポーザル方式</td></tr>
+          <tr><td>事業予算額</td><td class="num">8,000,000円（税込）</td></tr>
+          <tr><td>公告日</td><td>令和８年４月１日</td></tr>
+          <tr><td>公告媒体</td><td>HIT公式ウェブサイト、広島県公報</td></tr>
+          <tr><td>参加資格確認申請期限</td><td>令和８年４月８日（月）17:00</td></tr>
+          <tr><td>質問受付期限</td><td>令和８年４月10日（水）17:00</td></tr>
+          <tr><td>提案書提出期限</td><td>令和８年４月14日（月）17:00</td></tr>
+          <tr><td>審査会開催日</td><td>令和８年４月18日（金）</td></tr>
+        </table>
+        <h2 class="doc-h2">２ 参加状況</h2>
+        <table class="doc-table">
+          <tr><th>段階</th><th>社数</th><th>備考</th></tr>
+          <tr><td>参加資格確認申請</td><td class="num">4社</td><td></td></tr>
+          <tr><td>参加資格確認結果</td><td class="num">4社（全社適格）</td><td>不適格：0社</td></tr>
+          <tr><td>質問提出</td><td class="num">3社（計8件）</td><td>回答は全参加者に通知済み</td></tr>
+          <tr><td>提案書提出</td><td class="num">3社</td><td>1社辞退（理由：業務繁忙）</td></tr>
+        </table>
+        <h2 class="doc-h2">３ 審査結果</h2>
+        <table class="doc-table">
+          <tr><th>順位</th><th>提案者</th><th>合計点</th><th>得点率</th><th>結果</th></tr>
+          <tr class="highlight-row"><td>1位</td><td>A社</td><td class="num">432点</td><td class="num">86.4%</td><td><span class="badge-high">最優秀</span></td></tr>
+          <tr><td>2位</td><td>B社</td><td class="num">378点</td><td class="num">75.6%</td><td>次点</td></tr>
+          <tr><td>3位</td><td>C社</td><td class="num">312点</td><td class="num">62.4%</td><td></td></tr>
+        </table>
+        <div class="doc-note">※ 審査委員5名による合議制。満点500点。合格基準点300点（60%）。全社合格基準点以上。</div>
+        <h2 class="doc-h2">４ 結論</h2>
+        <p class="doc-p">上記の審査結果に基づき、A社を最優秀提案者として選定し、契約交渉を行うことが適当であると報告する。なお、契約交渉が不調に終わった場合は、次点者であるB社と交渉を行うものとする。</p>
+        <p style="text-align:right;font-size:12px;margin-top:24px;color:#666;">以上</p>
+      </div>
+
+      <!-- ===== 添付2: 提案書審査評価基準及び審査結果一覧表 ===== -->
+      <div class="tab-content" id="t1-att2">
+        <h1 class="doc-h1">提案書審査評価基準及び審査結果一覧表</h1>
+        <p style="text-align:center;font-size:12px;color:#666;margin-bottom:24px;">案件名: 令和８年度広島県観光デジタルコンテンツ制作及びSNS運用業務 ｜ 審査日: 令和８年４月18日</p>
+        <h2 class="doc-h2">評価基準</h2>
+        <table class="doc-table">
+          <tr><th>評価項目</th><th>評価の視点</th><th>配点</th></tr>
+          <tr><td>１ 業務理解度</td><td>広島県の観光課題及び本業務の目的に対する理解度</td><td class="num">50点</td></tr>
+          <tr><td>２ 企画・提案力</td><td>コンテンツ企画の独創性、ターゲット設定の妥当性</td><td class="num">80点</td></tr>
+          <tr><td>３ 制作体制・品質</td><td>制作チームの構成、品質管理体制</td><td class="num">60点</td></tr>
+          <tr><td>４ SNS運用実績</td><td>過去の観光・自治体SNS運用実績、フォロワー増加実績</td><td class="num">70点</td></tr>
+          <tr><td>５ インフルエンサー施策</td><td>インフルエンサー選定方針、効果測定手法</td><td class="num">50点</td></tr>
+          <tr><td>６ 効果測定・改善</td><td>KPI設定の妥当性、PDCAサイクルの運用方法</td><td class="num">40点</td></tr>
+          <tr><td>７ 実施スケジュール</td><td>スケジュールの実現可能性、マイルストーンの適切さ</td><td class="num">30点</td></tr>
+          <tr><td>８ 見積金額</td><td>価格の妥当性（最低価格者に満点、比例配分）</td><td class="num">60点</td></tr>
+          <tr><td>９ プレゼンテーション</td><td>説明の明瞭さ、質疑応答の的確さ</td><td class="num">60点</td></tr>
+          <tr style="background:#f0f4ff;font-weight:700;"><td colspan="2">合計</td><td class="num">500点</td></tr>
+        </table>
+        <h2 class="doc-h2">審査結果一覧</h2>
+        <table class="doc-table">
+          <tr><th>評価項目</th><th>配点</th><th>A社</th><th>B社</th><th>C社</th></tr>
+          <tr><td>１ 業務理解度</td><td class="num">50</td><td class="num" style="color:#28a745;font-weight:700;">45</td><td class="num">38</td><td class="num">32</td></tr>
+          <tr><td>２ 企画・提案力</td><td class="num">80</td><td class="num" style="color:#28a745;font-weight:700;">72</td><td class="num">64</td><td class="num">48</td></tr>
+          <tr><td>３ 制作体制・品質</td><td class="num">60</td><td class="num" style="color:#28a745;font-weight:700;">52</td><td class="num">48</td><td class="num">40</td></tr>
+          <tr><td>４ SNS運用実績</td><td class="num">70</td><td class="num" style="color:#28a745;font-weight:700;">62</td><td class="num">55</td><td class="num">42</td></tr>
+          <tr><td>５ インフルエンサー施策</td><td class="num">50</td><td class="num">40</td><td class="num" style="color:#28a745;font-weight:700;">42</td><td class="num">35</td></tr>
+          <tr><td>６ 効果測定・改善</td><td class="num">40</td><td class="num" style="color:#28a745;font-weight:700;">35</td><td class="num">30</td><td class="num">28</td></tr>
+          <tr><td>７ 実施スケジュール</td><td class="num">30</td><td class="num" style="color:#28a745;font-weight:700;">26</td><td class="num">24</td><td class="num">22</td></tr>
+          <tr><td>８ 見積金額</td><td class="num">60</td><td class="num">48</td><td class="num">35</td><td class="num" style="color:#28a745;font-weight:700;">60</td></tr>
+          <tr><td>９ プレゼンテーション</td><td class="num">60</td><td class="num" style="color:#28a745;font-weight:700;">52</td><td class="num">42</td><td class="num">5</td></tr>
+          <tr class="highlight-row"><td>合計</td><td class="num">500</td><td class="num">432</td><td class="num">378</td><td class="num">312</td></tr>
+          <tr style="background:#f0f4ff;"><td>得点率</td><td></td><td class="num" style="font-weight:700;">86.4%</td><td class="num">75.6%</td><td class="num">62.4%</td></tr>
+          <tr style="background:#f0f4ff;"><td>順位</td><td></td><td style="text-align:center;"><span class="badge-high">1位（最優秀）</span></td><td style="text-align:center;">2位（次点）</td><td style="text-align:center;">3位</td></tr>
+        </table>
+        <div class="doc-note">※ 審査委員: 会長、事務局長、企画総務部長、営業部長、外部有識者（計5名）<br>※ 各委員の個別採点を集計した合議結果である。</div>
+      </div>
+
+      <!-- ===== 添付3: 最優秀提案者決定通知書（写） ===== -->
+      <div class="tab-content" id="t1-att3">
+        <h1 class="doc-h1">最優秀提案者決定通知書</h1>
+        <p style="text-align:right;font-size:12px;margin:24px 0 8px;">令和８年４月20日</p>
+        <p style="font-size:13px;margin-bottom:24px;">[要記入: A社正式名称]<br>代表取締役 [要記入: 代表者名]　殿</p>
+        <p style="text-align:right;font-size:13px;margin-bottom:32px;">一般社団法人広島県観光連盟<br>会長　[要記入: 会長名]</p>
+        <h2 class="doc-h2" style="text-align:center;border-left:none;padding-left:0;">令和８年度広島県観光デジタルコンテンツ制作及びSNS運用業務<br>公募型プロポーザルに係る最優秀提案者の決定について（通知）</h2>
+        <p class="doc-p">令和８年４月１日付けで公告した標記業務に係る公募型プロポーザルについて、提案書の審査を行った結果、貴社を最優秀提案者として決定しましたので、下記のとおり通知します。</p>
+        <p class="doc-p">つきましては、業務委託契約の締結に向けた協議を行いたいので、下記の連絡先までご連絡くださいますようお願いいたします。</p>
+        <h3 class="doc-h3" style="text-align:center;margin-top:32px;">記</h3>
+        <table class="doc-table">
+          <tr><th>項目</th><th>内容</th></tr>
+          <tr><td>業務名</td><td>令和８年度広島県観光デジタルコンテンツ制作及びSNS運用業務</td></tr>
+          <tr><td>選定結果</td><td>最優秀提案者</td></tr>
+          <tr><td>審査会開催日</td><td>令和８年４月18日</td></tr>
+          <tr><td>委託期間（予定）</td><td>契約締結の日から令和９年３月31日まで</td></tr>
+          <tr><td>事業予算額</td><td class="num">8,000,000円（税込）を上限</td></tr>
+        </table>
+        <h3 class="doc-h3">連絡先</h3>
+        <p class="doc-p" style="padding-left:16px;">
+          一般社団法人広島県観光連盟 企画総務部<br>
+          担当: [要記入: 担当者氏名]<br>
+          TEL: [要記入: 電話番号]<br>
+          E-mail: [要記入: メールアドレス]
+        </p>
+        <p style="text-align:center;font-size:12px;margin-top:32px;color:#666;">以上</p>
+        <div class="doc-note">※ 本通知書は写しであり、原本は受託候補者に交付済みである。</div>
+      </div>
+
+      <!-- ===== 添付4: 仕様書 ===== -->
+      <div class="tab-content" id="t1-att4">
+        <h1 class="doc-h1">仕 様 書</h1>
+        <p style="text-align:center;font-size:13px;color:#666;margin-bottom:24px;">令和８年度広島県観光デジタルコンテンツ制作及びSNS運用業務</p>
+        <h2 class="doc-h2">第１条 業務名</h2>
+        <p class="doc-p">令和８年度広島県観光デジタルコンテンツ制作及びSNS運用業務</p>
+        <h2 class="doc-h2">第２条 業務目的</h2>
+        <p class="doc-p">広島県の観光資源を題材としたデジタルコンテンツの企画・制作及びSNSの戦略的運用を通じて、広島県への来訪意欲の醸成及び観光消費額の向上を図ることを目的とする。</p>
+        <h2 class="doc-h2">第３条 業務内容</h2>
+        <table class="doc-table">
+          <tr><th>No.</th><th>業務項目</th><th>数量・頻度</th><th>仕様</th></tr>
+          <tr><td>1</td><td>動画コンテンツ制作</td><td>年間24本以上</td><td>短尺15秒〜60秒、縦型9:16</td></tr>
+          <tr><td>2</td><td>静止画素材制作</td><td>年間100枚以上</td><td>JPEG/PNG、3000px以上</td></tr>
+          <tr><td>3</td><td>記事コンテンツ制作</td><td>年間12本以上</td><td>SEO対応、2000字以上</td></tr>
+          <tr><td>4</td><td>SNS運用</td><td>各週3回以上</td><td>IG/FB/X、DM24時間以内</td></tr>
+          <tr><td>5</td><td>インフルエンサー施策</td><td>3名以上起用</td><td>フォロワー1万人以上</td></tr>
+          <tr><td>6</td><td>効果測定・報告</td><td>月次/中間/最終</td><td>KPIダッシュボード含む</td></tr>
+        </table>
+        <h2 class="doc-h2">第４条 委託期間</h2>
+        <p class="doc-p">契約締結の日から令和９年３月31日まで</p>
+        <h2 class="doc-h2">第５条 事業予算額</h2>
+        <p class="doc-p">金<span class="doc-em">8,000,000円</span>（消費税及び地方消費税を含む。）を上限とする。</p>
+        <h2 class="doc-h2">第６条 著作権</h2>
+        <p class="doc-p">成果物の著作権（著作権法第27条及び第28条の権利を含む。）は、納品と同時に委託者に帰属するものとする。</p>
+        <h2 class="doc-h2">第７条 個人情報保護</h2>
+        <p class="doc-p">受託者は、本業務の履行に際し知り得た個人情報について、個人情報の保護に関する法律その他関係法令を遵守し、適切に管理しなければならない。</p>
+        <h2 class="doc-h2">第８条 再委託の制限</h2>
+        <p class="doc-p">受託者は、業務の全部又は主たる部分を第三者に委託してはならない。一部を再委託する場合は、書面により委託者の承認を得なければならない。</p>
+        <h2 class="doc-h2">第９条 機密保持</h2>
+        <p class="doc-p">受託者は、本業務の履行に際し知り得た情報を第三者に漏らしてはならない。契約終了後も同様とする。</p>
+      </div>
+
+      <!-- ===== 添付5: 契約書（案） ===== -->
+      <div class="tab-content" id="t1-att5">
+        <h1 class="doc-h1">業務委託契約書（案）</h1>
+        <p class="doc-p">一般社団法人広島県観光連盟（以下「甲」という。）と[要記入: A社正式名称]（以下「乙」という。）は、以下のとおり業務委託契約を締結する。</p>
+        <h2 class="doc-h2">第１条（業務名）</h2>
+        <p class="doc-p">令和８年度広島県観光デジタルコンテンツ制作及びSNS運用業務</p>
+        <h2 class="doc-h2">第２条（業務内容）</h2>
+        <p class="doc-p">乙は、別添仕様書に定める業務を誠実に履行するものとする。</p>
+        <h2 class="doc-h2">第３条（委託期間）</h2>
+        <p class="doc-p">本契約の委託期間は、契約締結の日から令和９年３月31日までとする。</p>
+        <h2 class="doc-h2">第４条（委託料）</h2>
+        <p class="doc-p">甲は、本業務の対価として金 <span class="doc-em">[要記入: 契約金額]円</span>（うち消費税及び地方消費税の額 [要記入]円）を乙に支払うものとする。</p>
+        <h2 class="doc-h2">第５条（支払方法）</h2>
+        <p class="doc-p">乙は、業務完了後、甲に対し業務完了報告書及び請求書を提出するものとする。甲は、適法な請求書を受理した日から30日以内に委託料を支払うものとする。</p>
+        <h2 class="doc-h2">第６条（成果物の帰属）</h2>
+        <p class="doc-p">本業務により作成された成果物に係る著作権（著作権法第27条及び第28条に規定する権利を含む。）その他一切の知的財産権は、納品をもって甲に帰属するものとする。</p>
+        <h2 class="doc-h2">第７条（機密保持）</h2>
+        <p class="doc-p">甲及び乙は、本契約の履行に関して知り得た相手方の機密情報を第三者に開示又は漏洩してはならない。本条の規定は、本契約終了後もなお効力を有する。</p>
+        <h2 class="doc-h2">第８条（個人情報の取扱い）</h2>
+        <p class="doc-p">乙は、本業務の履行に際し取り扱う個人情報について、個人情報の保護に関する法律その他関係法令を遵守するとともに、甲の指示に従い適切に管理するものとする。</p>
+        <h2 class="doc-h2">第９条（再委託の禁止）</h2>
+        <p class="doc-p">乙は、甲の書面による事前の承認を得ることなく、本業務の全部又は主要な部分を第三者に再委託してはならない。</p>
+        <h2 class="doc-h2">第10条（契約の解除）</h2>
+        <p class="doc-p">甲は、乙が本契約に違反した場合、催告の上、本契約を解除することができる。</p>
+        <h2 class="doc-h2">第11条（損害賠償）</h2>
+        <p class="doc-p">甲又は乙は、本契約に違反して相手方に損害を与えた場合、その損害を賠償しなければならない。</p>
+        <h2 class="doc-h2">第12条（協議事項）</h2>
+        <p class="doc-p">本契約に定めのない事項又は本契約の解釈に疑義が生じた場合は、甲乙協議の上、誠意をもって解決するものとする。</p>
+        <p class="doc-p" style="margin-top:32px;">本契約の締結を証するため、本書2通を作成し、甲乙記名押印の上、各1通を保有する。</p>
+        <p class="doc-p" style="margin-top:16px;">令和８年　　月　　日</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:32px;margin-top:24px;">
+          <div style="font-size:12px;line-height:2;"><strong>甲</strong><br>広島市中区基町5-44<br>一般社団法人広島県観光連盟<br>会長　[要記入: 会長名]　　印</div>
+          <div style="font-size:12px;line-height:2;"><strong>乙</strong><br>[要記入: 所在地]<br>[要記入: A社正式名称]<br>代表取締役　[要記入: 代表者名]　　印</div>
+        </div>
+      </div>
+
+      <!-- ===== 添付6: A社 提案書（写） ===== -->
+      <div class="tab-content" id="t1-att6">
+        <h1 class="doc-h1">提 案 書（写）</h1>
+        <p style="text-align:center;font-size:13px;color:#666;margin-bottom:8px;">令和８年度広島県観光デジタルコンテンツ制作及びSNS運用業務</p>
+        <p style="text-align:center;font-size:12px;color:#999;margin-bottom:24px;">提出日: 令和８年４月14日 ｜ A社</p>
+        <h2 class="doc-h2">１ 業務に対する基本方針</h2>
+        <p class="doc-p">広島県が有する瀬戸内海の多島美、世界遺産、食文化等の豊かな観光資源を、デジタルファーストの視点で再構築し、国内外の旅行者の「行きたい」を「行く」に変えるコンテンツ戦略を提案いたします。</p>
+        <p class="doc-p">特に、以下の3つの柱を基本方針として掲げます。</p>
+        <p class="doc-p" style="padding-left:16px;">
+          <strong>柱1: ストーリーテリング重視のコンテンツ制作</strong> — 観光スポットの紹介に留まらず、「体験」と「感動」を軸にしたストーリー性のある映像・記事を制作<br>
+          <strong>柱2: データドリブンSNS運用</strong> — 各プラットフォームの特性を活かしたコンテンツ最適化とKPIに基づくPDCA運用<br>
+          <strong>柱3: インフルエンサーとの共創</strong> — 一過性のPR投稿ではなく、広島ファンとしての継続的な情報発信パートナーシップ
+        </p>
+        <h2 class="doc-h2">２ 実施体制</h2>
+        <table class="doc-table">
+          <tr><th>役割</th><th>担当者</th><th>経験・実績</th></tr>
+          <tr><td>プロジェクトマネージャー</td><td>[氏名]</td><td>観光プロモーション10年、自治体案件5件</td></tr>
+          <tr><td>クリエイティブディレクター</td><td>[氏名]</td><td>映像制作15年、観光動画受賞歴あり</td></tr>
+          <tr><td>SNSストラテジスト</td><td>[氏名]</td><td>フォロワー50万人のアカウント運用経験</td></tr>
+          <tr><td>カメラマン/ビデオグラファー</td><td>[氏名]</td><td>瀬戸内エリア撮影実績多数</td></tr>
+          <tr><td>ライター/エディター</td><td>[氏名]</td><td>旅行メディア執筆10年</td></tr>
+          <tr><td>データアナリスト</td><td>[氏名]</td><td>GA4/SNS分析ツール認定資格保有</td></tr>
+        </table>
+        <h2 class="doc-h2">３ スケジュール</h2>
+        <table class="doc-table">
+          <tr><th>期間</th><th>フェーズ</th><th>主な作業内容</th></tr>
+          <tr><td>5月</td><td>立ち上げ</td><td>キックオフ、年間戦略策定、アカウント引継ぎ</td></tr>
+          <tr><td>6-8月</td><td>第1Q運用</td><td>夏季コンテンツ制作・配信、インフルエンサー選定</td></tr>
+          <tr><td>9-11月</td><td>第2Q運用</td><td>秋季コンテンツ（紅葉・食）、インフルエンサー施策実施</td></tr>
+          <tr><td>12-2月</td><td>第3Q運用</td><td>冬季コンテンツ（牡蠣・イルミネーション）</td></tr>
+          <tr><td>3月</td><td>総括</td><td>最終報告書作成、次年度への引継ぎ</td></tr>
+        </table>
+        <h2 class="doc-h2">４ 類似業務実績</h2>
+        <table class="doc-table">
+          <tr><th>案件名</th><th>発注元</th><th>期間</th><th>成果</th></tr>
+          <tr><td>〇〇県観光SNS運用業務</td><td>〇〇県観光連盟</td><td>R5-R7</td><td>フォロワー3倍増、ER 2.1倍</td></tr>
+          <tr><td>△△市インバウンド動画制作</td><td>△△市</td><td>R6</td><td>再生回数累計500万回</td></tr>
+          <tr><td>□□DMO SNS戦略策定</td><td>□□DMO</td><td>R7</td><td>KPI全項目達成</td></tr>
+        </table>
+        <div class="doc-note">※ 本書は提案書の写しであり、原本はA社が提出したものである。具体的な社名・個人名はプライバシー保護のため伏せている。</div>
+      </div>
+
+      <!-- ===== 添付7: A社 見積書 ===== -->
+      <div class="tab-content" id="t1-att7">
+        <h1 class="doc-h1">見 積 書</h1>
+        <div style="display:flex;justify-content:space-between;margin:24px 0;">
+          <div style="font-size:13px;">一般社団法人広島県観光連盟　御中</div>
+          <div style="font-size:12px;text-align:right;">見積日: 令和８年４月14日<br>見積番号: [要記入]<br>有効期限: 令和８年５月14日</div>
+        </div>
+        <div style="background:#f0f4ff;border:2px solid #0f3460;padding:16px;border-radius:8px;margin:20px 0;text-align:center;">
+          <p style="font-size:13px;color:#666;margin-bottom:4px;">見積金額（税込）</p>
+          <p style="font-size:32px;font-weight:700;color:#0f3460;font-family:monospace;">[要記入: 見積金額] 円</p>
+          <p style="font-size:11px;color:#666;margin-top:4px;">（うち消費税等 [要記入] 円）</p>
+        </div>
+        <p class="doc-p"><strong>件名:</strong> 令和８年度広島県観光デジタルコンテンツ制作及びSNS運用業務</p>
+        <h2 class="doc-h2">費目別内訳</h2>
+        <table class="doc-table">
+          <tr><th>No.</th><th>費目</th><th>内容</th><th>数量</th><th>単価</th><th>金額（税抜）</th></tr>
+          <tr><td>1</td><td>動画制作費</td><td>短尺動画（15-60秒）企画・撮影・編集</td><td class="num">24本</td><td class="num">[単価]円</td><td class="num">[金額]円</td></tr>
+          <tr><td>2</td><td>静止画制作費</td><td>撮影・レタッチ・納品</td><td class="num">100枚</td><td class="num">[単価]円</td><td class="num">[金額]円</td></tr>
+          <tr><td>3</td><td>記事制作費</td><td>取材・執筆・SEO対応（2000字以上）</td><td class="num">12本</td><td class="num">[単価]円</td><td class="num">[金額]円</td></tr>
+          <tr><td>4</td><td>SNS運用費</td><td>3アカウント運用（投稿・コメント対応・DM対応）</td><td class="num">12ヶ月</td><td class="num">[単価]円</td><td class="num">[金額]円</td></tr>
+          <tr><td>5</td><td>インフルエンサー施策費</td><td>インフルエンサー選定・交渉・管理・報酬</td><td class="num">3名</td><td class="num">[単価]円</td><td class="num">[金額]円</td></tr>
+          <tr><td>6</td><td>効果測定・報告費</td><td>月次レポート・中間報告・最終報告書</td><td class="num">一式</td><td class="num">—</td><td class="num">[金額]円</td></tr>
+          <tr><td>7</td><td>ディレクション費</td><td>プロジェクト管理・品質管理</td><td class="num">12ヶ月</td><td class="num">[単価]円</td><td class="num">[金額]円</td></tr>
+          <tr><td>8</td><td>諸経費</td><td>交通費・ロケハン・機材等</td><td class="num">一式</td><td class="num">—</td><td class="num">[金額]円</td></tr>
+          <tr style="background:#f0f4ff;font-weight:700;"><td colspan="5">小計（税抜）</td><td class="num">[小計]円</td></tr>
+          <tr style="background:#f0f4ff;"><td colspan="5">消費税等（10%）</td><td class="num">[消費税]円</td></tr>
+          <tr style="background:#e8f5e9;font-weight:700;"><td colspan="5">合計（税込）</td><td class="num">[合計]円</td></tr>
+        </table>
+        <h2 class="doc-h2">備考</h2>
+        <ol style="font-size:12px;padding-left:20px;line-height:2;">
+          <li>上記金額には交通費・宿泊費等の諸経費を含みます。</li>
+          <li>撮影場所・時期の変更等により追加費用が発生する場合は、事前に協議の上決定いたします。</li>
+          <li>インフルエンサーの報酬額はフォロワー規模・投稿内容により変動する場合があります。</li>
+          <li>納品形式はMP4（動画）、JPEG/PNG（静止画）、PDF/Excel（報告書）とします。</li>
+        </ol>
+        <div style="margin-top:32px;text-align:right;font-size:12px;line-height:2;">
+          [要記入: A社正式名称]<br>
+          [要記入: 所在地]<br>
+          代表取締役 [要記入: 代表者名]　　印
+        </div>
+      </div>
     `
   },
 
